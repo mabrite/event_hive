@@ -119,39 +119,60 @@ class _UserSignupState extends State<UserSignup> {
                     obscure: true),
                 const SizedBox(height: 16),
 
-                Text('Gender',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w500, color: EventHiveColors.text)),
+                // Gender
+                Text(
+                  'Gender',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: EventHiveColors.text,
+                  ),
+                ),
+                const SizedBox(height: 6),
                 Row(
                   children: [
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: Text('M', style: TextStyle(color: EventHiveColors.text)),
-                        value: 'Male',
-                        groupValue: _selectedGender,
-                        onChanged: (val) => setState(() => _selectedGender = val),
-                      ),
+                    Row(
+                      children: [
+                        Radio<String>(
+                          value: 'Male',
+                          groupValue: _selectedGender,
+                          onChanged: (val) =>
+                              setState(() => _selectedGender = val),
+                          activeColor: EventHiveColors.primary,
+                        ),
+                        const Text('Male'),
+                      ],
                     ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: Text('F', style: TextStyle(color: EventHiveColors.text)),
-                        value: 'Female',
-                        groupValue: _selectedGender,
-                        onChanged: (val) => setState(() => _selectedGender = val),
-                      ),
+                    const SizedBox(width: 20),
+                    Row(
+                      children: [
+                        Radio<String>(
+                          value: 'Female',
+                          groupValue: _selectedGender,
+                          onChanged: (val) =>
+                              setState(() => _selectedGender = val),
+                          activeColor: EventHiveColors.primary,
+                        ),
+                        const Text('Female'),
+                      ],
                     ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        title: Text('Other', style: TextStyle(color: EventHiveColors.text)),
-                        value: 'Other',
-                        groupValue: _selectedGender,
-                        onChanged: (val) => setState(() => _selectedGender = val),
-                      ),
+                    const SizedBox(width: 20),
+                    Row(
+                      children: [
+                        Radio<String>(
+                          value: 'Other',
+                          groupValue: _selectedGender,
+                          onChanged: (val) =>
+                              setState(() => _selectedGender = val),
+                          activeColor: EventHiveColors.primary,
+                        ),
+                        const Text('Other'),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 13),
 
+                // DOB
                 GestureDetector(
                   onTap: _selectDOB,
                   child: AbsorbPointer(
@@ -170,15 +191,18 @@ class _UserSignupState extends State<UserSignup> {
                             vertical: 18, horizontal: 16),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: EventHiveColors.secondaryLight),
+                          borderSide:
+                          BorderSide(color: EventHiveColors.secondaryLight),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: EventHiveColors.secondaryLight),
+                          borderSide:
+                          BorderSide(color: EventHiveColors.secondaryLight),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: EventHiveColors.primary, width: 1.5),
+                          borderSide: BorderSide(
+                              color: EventHiveColors.primary, width: 1.5),
                         ),
                       ),
                     ),
@@ -186,6 +210,7 @@ class _UserSignupState extends State<UserSignup> {
                 ),
                 const SizedBox(height: 16),
 
+                // Role
                 DropdownButtonFormField<String>(
                   value: _selectedRole,
                   decoration: InputDecoration(
@@ -196,15 +221,18 @@ class _UserSignupState extends State<UserSignup> {
                         vertical: 18, horizontal: 16),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: EventHiveColors.secondaryLight),
+                      borderSide:
+                      BorderSide(color: EventHiveColors.secondaryLight),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: EventHiveColors.secondaryLight),
+                      borderSide:
+                      BorderSide(color: EventHiveColors.secondaryLight),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: EventHiveColors.primary, width: 1.5),
+                      borderSide: BorderSide(
+                          color: EventHiveColors.primary, width: 1.5),
                     ),
                   ),
                   items: const [
@@ -244,13 +272,17 @@ class _UserSignupState extends State<UserSignup> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Already have an account? ',
-                        style: TextStyle(color: EventHiveColors.secondaryLight)),
+                    Text(
+                      'Already have an account? ',
+                      style: TextStyle(color: EventHiveColors.secondaryLight),
+                    ),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const UserLogin(name: '',)),
+                          MaterialPageRoute(
+                            builder: (_) => const UserLogin(name: ''),
+                          ),
                         );
                       },
                       child: Text(
@@ -286,7 +318,8 @@ class _UserSignupState extends State<UserSignup> {
         ),
         filled: true,
         fillColor: EventHiveColors.background,
-        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        contentPadding:
+        const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: EventHiveColors.secondaryLight),
@@ -297,10 +330,12 @@ class _UserSignupState extends State<UserSignup> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: EventHiveColors.primary, width: 1.5),
+          borderSide:
+          BorderSide(color: EventHiveColors.primary, width: 1.5),
         ),
       ),
-      validator: (val) => val == null || val.isEmpty ? 'Please enter $hint' : null,
+      validator: (val) =>
+      val == null || val.isEmpty ? 'Please enter $hint' : null,
     );
   }
 

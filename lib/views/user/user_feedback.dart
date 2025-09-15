@@ -36,7 +36,8 @@ class _UserFeedbackState extends State<UserFeedback> {
   void _submit() {
     if (selectedStars == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please rate your experience before submitting.")),
+        const SnackBar(
+            content: Text("Please rate your experience before submitting.")),
       );
       return;
     }
@@ -60,16 +61,23 @@ class _UserFeedbackState extends State<UserFeedback> {
 
   Widget _buildStar(int index) {
     List<String> emojis = ["😡", "😕", "😊", "😍", "🤩"];
+    final isSelected = index < selectedStars;
+
     return GestureDetector(
       onTap: () => setState(() => selectedStars = index + 1),
       child: Column(
         children: [
-          Icon(
-            Icons.star,
-            size: 36,
-            color: index < selectedStars
-                ? EventHiveColors.primary
-                : Colors.grey.shade300,
+          AnimatedScale(
+            scale: isSelected ? 1.3 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutBack,
+            child: Icon(
+              Icons.star,
+              size: 36,
+              color: isSelected
+                  ? EventHiveColors.primary
+                  : Colors.grey.shade300,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -79,6 +87,12 @@ class _UserFeedbackState extends State<UserFeedback> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -94,7 +108,8 @@ class _UserFeedbackState extends State<UserFeedback> {
               Align(
                 alignment: Alignment.topRight,
                 child: IconButton(
-                  icon: Icon(Icons.close, color: EventHiveColors.secondaryLight),
+                  icon: Icon(Icons.close,
+                      color: EventHiveColors.secondaryLight),
                   onPressed: () => Navigator.pop(context),
                   tooltip: 'Close feedback',
                 ),
@@ -152,22 +167,27 @@ class _UserFeedbackState extends State<UserFeedback> {
                 runSpacing: 12,
                 children: tags.map((tag) {
                   final isSelected = selectedTags.contains(tag);
-                  return FilterChip(
-                    label: Text(tag),
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : EventHiveColors.text,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    selected: isSelected,
-                    onSelected: (_) => _toggleTag(tag),
-                    backgroundColor: Colors.white,
-                    selectedColor: EventHiveColors.primary,
-                    checkmarkColor: Colors.white,
-                    side: BorderSide(color: EventHiveColors.primary),
-                    elevation: isSelected ? 4 : 1,
-                    shadowColor: Colors.black26,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    child: FilterChip(
+                      label: Text(tag),
+                      labelStyle: TextStyle(
+                        color:
+                        isSelected ? Colors.white : EventHiveColors.text,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      selected: isSelected,
+                      onSelected: (_) => _toggleTag(tag),
+                      backgroundColor: Colors.white,
+                      selectedColor: EventHiveColors.primary,
+                      checkmarkColor: Colors.white,
+                      side: BorderSide(color: EventHiveColors.primary),
+                      elevation: isSelected ? 4 : 1,
+                      shadowColor: Colors.black26,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   );
                 }).toList(),
@@ -192,8 +212,8 @@ class _UserFeedbackState extends State<UserFeedback> {
                   hintText: "Loved most of it! One small thing...",
                   fillColor: Colors.white,
                   filled: true,
-                  contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 14),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
                     borderSide: BorderSide.none,
@@ -237,7 +257,8 @@ class _UserFeedbackState extends State<UserFeedback> {
                   ),
                   child: const Text(
                     "Submit Feedback",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

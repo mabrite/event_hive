@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../themes/colors.dart';
 import 'organizer_events.dart';
@@ -10,34 +11,63 @@ class OrganizerMain extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Organizer Overview'),
-        centerTitle: true,
-        backgroundColor: EventHiveColors.primary,
-        foregroundColor: Colors.white,
-      ),
       backgroundColor: EventHiveColors.background,
+      appBar: AppBar(
+        title: const Text(
+          'Organizer Dashboard 🚀',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: EventHiveColors.text,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Welcome Back, Organizer!',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: EventHiveColors.text,
+            // Welcome Banner
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    EventHiveColors.primary,
+                    EventHiveColors.accent.withOpacity(0.8)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: EventHiveColors.primary.withOpacity(0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Text(
+                '✨ Welcome Back, Organizer!',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
 
             // Quick Stats Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildStatCard('Events', '12', Icons.event),
+                const SizedBox(width: 12),
                 _buildStatCard('Registrations', '245', Icons.people),
+                const SizedBox(width: 12),
                 _buildStatCard('Feedback', '34', Icons.feedback),
               ],
             ),
@@ -52,7 +82,7 @@ class OrganizerMain extends StatelessWidget {
                 color: EventHiveColors.text,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             _buildUpcomingEventCard(
               title: 'Tech Summit 2025',
               date: 'Sept 25, 2025',
@@ -74,10 +104,10 @@ class OrganizerMain extends StatelessWidget {
                 color: EventHiveColors.text,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: 14,
+              runSpacing: 14,
               children: [
                 _buildActionButton(
                   icon: Icons.add_circle,
@@ -111,78 +141,132 @@ class OrganizerMain extends StatelessWidget {
     );
   }
 
+  // Futuristic Stat Card
   Widget _buildStatCard(String label, String value, IconData icon) {
     return Expanded(
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              Icon(icon, size: 30, color: EventHiveColors.primary),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: EventHiveColors.text,
-                ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: EventHiveColors.primary.withOpacity(0.3),
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: EventHiveColors.secondaryLight,
+              boxShadow: [
+                BoxShadow(
+                  color: EventHiveColors.primary.withOpacity(0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
-              ),
-            ],
+              ],
+            ),
+            child: Column(
+              children: [
+                Icon(icon, size: 30, color: EventHiveColors.accent),
+                const SizedBox(height: 8),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: EventHiveColors.text,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: EventHiveColors.secondaryLight,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildUpcomingEventCard({required String title, required String date, required String location}) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: Icon(Icons.event, color: EventHiveColors.primary),
-        title: Text(
-          title,
-          style: TextStyle(fontWeight: FontWeight.bold, color: EventHiveColors.text),
+  // Futuristic Upcoming Event Card
+  Widget _buildUpcomingEventCard(
+      {required String title, required String date, required String location}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: EventHiveColors.primary.withOpacity(0.25),
+            ),
+          ),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: EventHiveColors.primary,
+              child: const Icon(Icons.event, color: Colors.white),
+            ),
+            title: Text(
+              title,
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, color: EventHiveColors.text),
+            ),
+            subtitle: Text(
+              '$date • $location',
+              style: TextStyle(color: EventHiveColors.secondaryLight),
+            ),
+            trailing: Icon(Icons.arrow_forward_ios,
+                size: 16, color: EventHiveColors.accent),
+          ),
         ),
-        subtitle: Text(
-          '$date • $location',
-          style: TextStyle(color: EventHiveColors.text),
-        ),
-        trailing: Icon(Icons.arrow_forward_ios, size: 16, color: EventHiveColors.secondary),
       ),
     );
   }
 
-  Widget _buildActionButton({required IconData icon, required String label, required VoidCallback onTap}) {
+  // Futuristic Quick Action Button
+  Widget _buildActionButton(
+      {required IconData icon,
+        required String label,
+        required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 110,
-        padding: const EdgeInsets.all(12),
+        width: 115,
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: EventHiveColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              EventHiveColors.primary.withOpacity(0.8),
+              EventHiveColors.accent.withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: EventHiveColors.primary.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, size: 28, color: EventHiveColors.primary),
+            Icon(icon, size: 28, color: Colors.white),
             const SizedBox(height: 6),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: EventHiveColors.text),
+              style: const TextStyle(fontSize: 14, color: Colors.white),
             ),
           ],
         ),

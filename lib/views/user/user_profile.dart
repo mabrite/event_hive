@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../themes/colors.dart'; // Use your central color palette
+import '../../themes/colors.dart';
 import '../auth/user_login.dart';
 import '../settings/edit_profile_screen.dart';
 import '../settings/change_password_screen.dart';
@@ -38,7 +38,7 @@ class UserProfile extends StatelessWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: 20),
-                      _buildProfileImage(),
+                      Hero(tag: "profile-avatar", child: _buildProfileImage()),
                       const SizedBox(height: 20),
                       _buildUserName(),
                       const SizedBox(height: 15),
@@ -65,21 +65,9 @@ class UserProfile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 7),
       child: Row(
         children: [
-          GestureDetector(
+          _circleButton(
+            icon: Icons.arrow_back_ios_new,
             onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: EventHiveColors.primary,
-                size: 18,
-              ),
-            ),
           ),
           const SizedBox(width: 15),
           const Text(
@@ -91,35 +79,42 @@ class UserProfile extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          GestureDetector(
+          _circleButton(
+            icon: Icons.edit,
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const EditProfileScreen(),
+                ),
               );
             },
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.edit,
-                color: EventHiveColors.primary,
-                size: 18,
-              ),
-            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _circleButton({required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: EventHiveColors.primary, size: 18),
+      ),
+    );
+  }
+
   /// ---------- PROFILE IMAGE ----------
   Widget _buildProfileImage() {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(seconds: 2),
+      curve: Curves.easeInOut,
       width: 120,
       height: 120,
       decoration: BoxDecoration(
@@ -129,9 +124,9 @@ class UserProfile extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: EventHiveColors.primary.withOpacity(0.4),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            spreadRadius: 3,
           ),
         ],
       ),
@@ -218,7 +213,7 @@ class UserProfile extends StatelessWidget {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -248,7 +243,7 @@ class UserProfile extends StatelessWidget {
             context,
             Icons.palette_outlined,
             "Appearance",
-            AppearanceScreen(), // ✅ fixed
+            AppearanceScreen(),
           ),
           _buildDivider(),
           _buildSettingsTile(
@@ -288,13 +283,13 @@ class UserProfile extends StatelessWidget {
       BuildContext context, IconData icon, String title, Widget page) {
     return ListTile(
       leading: Container(
-        width: 40,
-        height: 40,
+        width: 42,
+        height: 42,
         decoration: BoxDecoration(
           color: EventHiveColors.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: EventHiveColors.primary, size: 20),
+        child: Icon(icon, color: EventHiveColors.primary, size: 22),
       ),
       title: Text(
         title,
@@ -304,24 +299,12 @@ class UserProfile extends StatelessWidget {
           color: EventHiveColors.text,
         ),
       ),
-      trailing: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: EventHiveColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: EventHiveColors.primary,
-        ),
-      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: EventHiveColors.primary),
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => page),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
     );
   }
 
@@ -344,24 +327,23 @@ class UserProfile extends StatelessWidget {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (_) => const UserLogin(name: "Guest"), // ✅ fixed
+              builder: (_) => const UserLogin(name: "Guest"),
             ),
                 (route) => false,
           );
         },
-        icon: const Icon(Icons.logout_rounded, size: 20),
+        icon: const Icon(Icons.logout_rounded, size: 20, color: Colors.white),
         label: const Text(
           "Logout",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.red,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          backgroundColor: EventHiveColors.accent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
-            side: BorderSide(color: Colors.red.withOpacity(0.3), width: 1),
           ),
-          elevation: 0,
+          elevation: 4,
         ),
       ),
     );

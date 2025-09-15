@@ -21,6 +21,9 @@ import 'views/organizer/organizer_profile.dart';
 import 'views/organizer/organizer_feedback.dart';
 import 'views/organizer/organizer_users.dart';
 
+// Splash
+import 'views/splash_screen.dart'; // ✅ import splash
+
 void main() {
   runApp(const EventHivesApp());
 }
@@ -51,17 +54,18 @@ class EventHivesApp extends StatelessWidget {
           onSurface: EventHiveColors.text,
         ),
       ),
-      initialRoute: '/',
+      initialRoute: '/', // ✅ start with splash
       routes: {
-        '/': (context) => const LandingPage(),
+        '/': (context) => const SplashScreen(),
+        '/landing': (context) => const LandingPage(),
 
         // User
         '/login_user': (context) => const UserLogin(name: ''),
         '/signup_user': (context) => const UserSignup(),
         '/forgot_user': (context) => const UserForgotPassword(),
         '/user': (context) => UserMain(),
-        //
-        // // Admin
+
+        // Admin
         '/login_admin': (context) => const AdminLogin(),
         '/signup_admin': (context) => const AdminSignup(),
         '/forgot_admin': (context) => const AdminForgotPassword(),
@@ -81,6 +85,7 @@ class EventHivesApp extends StatelessWidget {
   }
 }
 
+// ✅ LandingPage remains unchanged
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
 

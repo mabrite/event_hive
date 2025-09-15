@@ -46,7 +46,7 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Profile updated successfully")),
+      const SnackBar(content: Text("✅ Profile updated successfully")),
     );
   }
 
@@ -66,9 +66,10 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
         title: const Text("Organizer Profile"),
         backgroundColor: EventHiveColors.primary,
         foregroundColor: Colors.white,
+        elevation: 4,
         actions: [
           IconButton(
-            icon: Icon(isEditing ? Icons.save : Icons.edit),
+            icon: Icon(isEditing ? Icons.save_rounded : Icons.edit_rounded),
             onPressed: isEditing ? _saveProfile : _toggleEdit,
           ),
         ],
@@ -77,48 +78,69 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // Avatar with gradient ring
             Center(
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: EventHiveColors.primary.withOpacity(0.2),
-                child: Icon(
-                  Icons.person,
-                  size: 50,
-                  color: EventHiveColors.primary,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [EventHiveColors.primary, EventHiveColors.accent],
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 55,
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.person,
+                    size: 55,
+                    color: EventHiveColors.primary,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildProfileField("Full Name", _nameController, isEditing),
-                    _buildProfileField("Email", _emailController, isEditing),
-                    _buildProfileField("Phone", _phoneController, isEditing),
-                    _buildProfileField("Organization", _organizationController, isEditing),
-                  ],
+            const SizedBox(height: 25),
+
+            // Profile Card
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              child: Card(
+                key: ValueKey(isEditing),
+                elevation: 6,
+                shadowColor: EventHiveColors.secondary.withOpacity(0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Column(
+                    children: [
+                      _buildProfileField("Full Name", _nameController, isEditing),
+                      _buildProfileField("Email", _emailController, isEditing),
+                      _buildProfileField("Phone", _phoneController, isEditing),
+                      _buildProfileField("Organization", _organizationController, isEditing),
+                    ],
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 30),
+
+            const SizedBox(height: 40),
+
+            // Logout Button
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: EventHiveColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                backgroundColor: EventHiveColors.accent,
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(14),
                 ),
+                elevation: 5,
               ),
-              icon: const Icon(Icons.logout, color: Colors.white),
+              icon: const Icon(Icons.logout_rounded, color: Colors.white),
               label: const Text(
                 "Logout",
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
               ),
               onPressed: _logout,
             ),
@@ -131,17 +153,23 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
   Widget _buildProfileField(
       String label, TextEditingController controller, bool editable) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 18),
       child: editable
           ? TextField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
+          filled: true,
+          fillColor: Colors.grey.shade100,
           labelStyle: TextStyle(color: EventHiveColors.secondary),
           focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: EventHiveColors.primary, width: 1.5),
           ),
-          enabledBorder: const OutlineInputBorder(),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
         ),
       )
           : Column(
@@ -155,7 +183,7 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
               color: EventHiveColors.secondary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             controller.text,
             style: TextStyle(fontSize: 16, color: EventHiveColors.text),
