@@ -13,4 +13,8 @@ class EventHiveColors {
   static const Color primaryLight = Color(0xFF5ED7DB);
   static const Color secondaryLight = Color(0xFF6D737A);
   static const Color accentLight = Color(0xFFF5A880);
+
+  // ✅ Add missing text colors
+   static const Color textPrimary = Colors.white;
+   static const Color textSecondary = Colors.grey;
 }

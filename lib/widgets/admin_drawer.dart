@@ -1,9 +1,12 @@
+import 'package:event_hive/views/user/user_main.dart';
 import 'package:flutter/material.dart';
 import '../views/admin/admin_dashboard.dart';
 import '../views/admin/admin_events.dart';
 import '../views/admin/admin_users.dart';
 import '../views/admin/admin_feedback.dart';
-import '../themes/colors.dart'; // ✅ Import your EventHiveColors
+import '../themes/colors.dart';
+import '../services/auth_service.dart'; // You'll need to create this
+import '../views/auth/user_login.dart'; // You'll need to create this
 
 class AdminDrawer extends StatefulWidget {
   const AdminDrawer({super.key});
@@ -20,18 +23,20 @@ class _AdminDrawerState extends State<AdminDrawer>
   late Animation<double> _pulseAnimation;
 
   int? _hoveredIndex;
+  int? _selectedIndex = 0;
+  bool _isLoggingOut = false;
 
   @override
   void initState() {
     super.initState();
 
     _slideController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
 
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
@@ -40,12 +45,12 @@ class _AdminDrawerState extends State<AdminDrawer>
       end: 0,
     ).animate(CurvedAnimation(
       parent: _slideController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutCubic,
     ));
 
     _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
+      begin: 0.9,
+      end: 1.1,
     ).animate(CurvedAnimation(
       parent: _pulseController,
       curve: Curves.easeInOut,
@@ -62,6 +67,62 @@ class _AdminDrawerState extends State<AdminDrawer>
     super.dispose();
   }
 
+  // Logout method
+  Future<void> _logout(BuildContext context) async {
+    setState(() {
+      _isLoggingOut = true;
+    });
+
+    try {
+      // Show confirmation dialog
+      final shouldLogout = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Logout'),
+            content: const Text('Are you sure you want to logout?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (shouldLogout == true) {
+        // Call your authentication service to logout
+        await AuthService.logout();
+
+        // Navigate to login screen and remove all previous routes
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const UserLogin(name: '')),
+              (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      // Show error message if logout fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logout failed: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoggingOut = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -72,17 +133,10 @@ class _AdminDrawerState extends State<AdminDrawer>
           child: Container(
             width: 280,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  EventHiveColors.secondary, // dark grey
-                  EventHiveColors.text,      // charcoal
-                ],
-              ),
+              color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: EventHiveColors.primary.withOpacity(0.3),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -92,49 +146,58 @@ class _AdminDrawerState extends State<AdminDrawer>
               backgroundColor: Colors.transparent,
               child: Column(
                 children: [
-                  _buildFuturisticHeader(),
+                  _buildHeader(),
                   Expanded(
                     child: ListView(
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       children: [
-                        _buildAnimatedDrawerItem(
+                        _buildDrawerItem(
                           context,
                           index: 0,
                           icon: Icons.dashboard_outlined,
                           activeIcon: Icons.dashboard,
-                          text: 'DASHBOARD',
+                          text: 'Dashboard',
                           destination: const AdminDashboard(),
                         ),
-                        const SizedBox(height: 8),
-                        _buildAnimatedDrawerItem(
+                        const SizedBox(height: 4),
+                        _buildDrawerItem(
                           context,
                           index: 1,
                           icon: Icons.event_outlined,
                           activeIcon: Icons.event,
-                          text: 'EVENTS',
+                          text: 'Events',
                           destination: const AdminEvents(),
                         ),
-                        const SizedBox(height: 8),
-                        _buildAnimatedDrawerItem(
+                        const SizedBox(height: 4),
+                        _buildDrawerItem(
                           context,
                           index: 2,
                           icon: Icons.people_outline,
                           activeIcon: Icons.people,
-                          text: 'USERS',
+                          text: 'Users',
                           destination: const AdminUsers(),
                         ),
-                        const SizedBox(height: 8),
-                        _buildAnimatedDrawerItem(
+                        const SizedBox(height: 4),
+                        _buildDrawerItem(
                           context,
                           index: 3,
                           icon: Icons.feedback_outlined,
                           activeIcon: Icons.feedback,
-                          text: 'FEEDBACK',
+                          text: 'Feedback',
                           destination: const AdminFeedback(),
                         ),
-                        const SizedBox(height: 30),
-                        _buildGlowingDivider(),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 4),
+                        _buildDrawerItem(
+                          context,
+                          index: 3,
+                          icon: Icons.dashboard_customize_rounded,
+                          activeIcon: Icons.feedback,
+                          text: 'User Dashboard',
+                          destination: const UserMain(),
+                        ),
+                        const SizedBox(height: 24),
+                        const Divider(height: 1, thickness: 1),
+                        const SizedBox(height: 24),
                         _buildLogoutButton(),
                       ],
                     ),
@@ -148,76 +211,71 @@ class _AdminDrawerState extends State<AdminDrawer>
     );
   }
 
-  Widget _buildFuturisticHeader() {
+  Widget _buildHeader() {
     return Container(
-      height: 200,
+      height: 180,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            EventHiveColors.primary.withOpacity(0.8),
-            EventHiveColors.accent.withOpacity(0.8),
-            EventHiveColors.secondary.withOpacity(0.8),
-          ],
+        color: EventHiveColors.primary,
+        borderRadius: const BorderRadius.only(
+          bottomRight: Radius.circular(20),
         ),
       ),
       child: Stack(
         children: [
-          ...List.generate(20, (index) {
-            return AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                return Positioned(
-                  left: (index * 30.0) % 280,
-                  top: (index * 15.0) % 200,
-                  child: Container(
-                    width: 4,
-                    height: 4,
+          // Background pattern
+          ...List.generate(15, (index) {
+            return Positioned(
+              left: (index * 40.0) % 280,
+              top: (index * 20.0) % 180,
+              child: AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  return Container(
+                    width: 6,
+                    height: 6,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3 * _pulseAnimation.value),
+                      color: Colors.white.withOpacity(0.2 * _pulseAnimation.value),
                       shape: BoxShape.circle,
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             );
           }),
-          Positioned(
-            left: 30,
-            bottom: 30,
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Icon(
-                  Icons.admin_panel_settings,
-                  size: 36,
-                  color: Colors.white,
-                ),
-                SizedBox(height: 15),
-                Text(
-                  'ADMIN',
-                  style: TextStyle(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.admin_panel_settings,
+                    size: 32,
                     color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 3,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black54,
-                        offset: Offset(2, 2),
-                        blurRadius: 4,
-                      ),
-                    ],
                   ),
                 ),
-                Text(
-                  'CONTROL PANEL',
+                const SizedBox(height: 16),
+                const Text(
+                  'Admin Panel',
                   style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2,
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Manage your platform',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 14,
                   ),
                 ),
               ],
@@ -228,7 +286,7 @@ class _AdminDrawerState extends State<AdminDrawer>
     );
   }
 
-  Widget _buildAnimatedDrawerItem(
+  Widget _buildDrawerItem(
       BuildContext context, {
         required int index,
         required IconData icon,
@@ -237,173 +295,128 @@ class _AdminDrawerState extends State<AdminDrawer>
         required Widget destination,
       }) {
     final isHovered = _hoveredIndex == index;
+    final isSelected = _selectedIndex == index;
 
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 200 + (index * 100)),
-      tween: Tween(begin: 0, end: 1),
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset((1 - value) * 100, 0),
-          child: Opacity(
-            opacity: value,
-            child: MouseRegion(
-              onEnter: (_) => setState(() => _hoveredIndex = index),
-              onExit: (_) => setState(() => _hoveredIndex = null),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: isHovered
-                      ? LinearGradient(
-                    colors: [
-                      EventHiveColors.primary.withOpacity(0.3),
-                      EventHiveColors.accent.withOpacity(0.3),
-                    ],
-                  )
-                      : null,
-                  border: Border.all(
-                    color: isHovered
-                        ? EventHiveColors.primary.withOpacity(0.5)
-                        : Colors.transparent,
-                    width: 1,
-                  ),
-                  boxShadow: isHovered
-                      ? [
-                    BoxShadow(
-                      color: EventHiveColors.primary.withOpacity(0.3),
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    ),
-                  ]
-                      : null,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Material(
+        color: isSelected
+            ? EventHiveColors.primary.withOpacity(0.1)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              _selectedIndex = index;
+            });
+            Navigator.pop(context);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => destination),
+            );
+          },
+          onHover: (hovering) {
+            setState(() {
+              _hoveredIndex = hovering ? index : null;
+            });
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              border: isSelected
+                  ? Border(
+                left: BorderSide(
+                  color: EventHiveColors.primary,
+                  width: 3,
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 8,
-                  ),
-                  leading: Icon(
-                    isHovered ? activeIcon : icon,
-                    color: isHovered
+              )
+                  : null,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isSelected || isHovered ? activeIcon : icon,
+                  color: isSelected
+                      ? EventHiveColors.primary
+                      : EventHiveColors.text.withOpacity(0.7),
+                  size: 24,
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: isSelected
                         ? EventHiveColors.primary
-                        : Colors.white70,
-                    size: 24,
+                        : EventHiveColors.text,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 15,
                   ),
-                  title: Text(
-                    text,
-                    style: TextStyle(
-                      color: isHovered ? Colors.white : Colors.white70,
-                      fontWeight: isHovered ? FontWeight.w700 : FontWeight.w500,
-                      fontSize: 14,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  trailing: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: isHovered ? 1 : 0,
-                    child: const Icon(
-                      Icons.arrow_forward_ios,
-                      color: EventHiveColors.primary,
-                      size: 16,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => destination),
-                    );
-                  },
                 ),
-              ),
+                const Spacer(),
+                if (isHovered)
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: EventHiveColors.primary,
+                    size: 16,
+                  ),
+              ],
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildGlowingDivider() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
-      height: 1,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Colors.transparent,
-            EventHiveColors.primary,
-            Colors.transparent,
-          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: EventHiveColors.primary.withOpacity(0.5),
-            blurRadius: 10,
-            spreadRadius: 1,
-          ),
-        ],
       ),
     );
   }
 
   Widget _buildLogoutButton() {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hoveredIndex = 99),
-      onExit: (_) => setState(() => _hoveredIndex = null),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.symmetric(horizontal: 24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: _hoveredIndex == 99
-              ? LinearGradient(
-            colors: [
-              EventHiveColors.accent,
-              EventHiveColors.primary,
-            ],
-          )
-              : null,
-          border: Border.all(
-            color: _hoveredIndex == 99
-                ? EventHiveColors.accent
-                : EventHiveColors.accent.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 8,
-          ),
-          leading: Icon(
-            Icons.logout,
-            color:
-            _hoveredIndex == 99 ? Colors.white : EventHiveColors.accent,
-            size: 24,
-          ),
-          title: Text(
-            'LOGOUT',
-            style: TextStyle(
-              color: _hoveredIndex == 99 ? Colors.white : EventHiveColors.accent,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              letterSpacing: 1.2,
-            ),
-          ),
-          trailing: AnimatedOpacity(
-            duration: const Duration(milliseconds: 300),
-            opacity: _hoveredIndex == 99 ? 1 : 0,
-            child: const Icon(
-              Icons.power_settings_new,
-              color: Colors.white,
-              size: 16,
-            ),
-          ),
-          onTap: () {
-            Navigator.pop(context);
-            // TODO: Implement logout functionality
+    final isHovered = _hoveredIndex == 99;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Material(
+        color: isHovered ? Colors.red.withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: () => _logout(context),
+          onHover: (hovering) {
+            setState(() {
+              _hoveredIndex = hovering ? 99 : null;
+            });
           },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                if (_isLoggingOut)
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isHovered ? Colors.red : EventHiveColors.text.withOpacity(0.7),
+                      ),
+                    ),
+                  )
+                else
+                  Icon(
+                    Icons.logout,
+                    color: isHovered ? Colors.red : EventHiveColors.text.withOpacity(0.7),
+                    size: 24,
+                  ),
+                const SizedBox(width: 16),
+                Text(
+                  _isLoggingOut ? 'Logging out...' : 'Logout',
+                  style: TextStyle(
+                    color: isHovered ? Colors.red : EventHiveColors.text,
+                    fontWeight: isHovered ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

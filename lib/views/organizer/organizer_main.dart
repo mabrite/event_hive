@@ -119,7 +119,7 @@ class OrganizerMain extends StatelessWidget {
                 ),
                 _buildActionButton(
                   icon: Icons.people,
-                  label: 'Manage Users',
+                  label: 'Manage Registered Attendees',
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const OrganizerUsers()),

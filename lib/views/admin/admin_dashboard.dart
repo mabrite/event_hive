@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../widgets/admin_drawer.dart';
-import '../../themes/colors.dart'; // Import your global palette
+import '../../themes/colors.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -56,11 +56,15 @@ class _AdminDashboardState extends State<AdminDashboard>
       appBar: _buildModernAppBar(),
       drawer: const AdminDrawer(),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [EventHiveColors.background, EventHiveColors.secondaryLight],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [
+              EventHiveColors.background,
+              EventHiveColors.background,
+              EventHiveColors.primaryLight.withOpacity(0.05),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: SingleChildScrollView(
@@ -69,19 +73,18 @@ class _AdminDashboardState extends State<AdminDashboard>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildWelcomeCard(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               _buildAnalyticsGrid(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               _buildQuickActionsRow(),
-              const SizedBox(height: 20),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildRecentActivity()),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildPerformanceChart()),
-                ],
-              ),
+              const SizedBox(height: 24),
+              _buildSectionTitle("Recent Activity"),
+              const SizedBox(height: 12),
+              _buildRecentActivity(),
+              const SizedBox(height: 24),
+              // _buildSectionTitle("System Performance"),
+              // const SizedBox(height: 12),
+              // _buildPerformanceChart(),
             ],
           ),
         ),
@@ -92,8 +95,9 @@ class _AdminDashboardState extends State<AdminDashboard>
   /// Modern AppBar
   PreferredSizeWidget _buildModernAppBar() {
     return AppBar(
-      backgroundColor: EventHiveColors.primary.withOpacity(0.8),
+      backgroundColor: Colors.white,
       elevation: 0,
+      iconTheme: const IconThemeData(color: EventHiveColors.primary),
       title: Row(
         children: [
           AnimatedBuilder(
@@ -101,7 +105,7 @@ class _AdminDashboardState extends State<AdminDashboard>
             builder: (context, child) {
               return Transform.rotate(
                 angle: _rotateAnimation.value,
-                child: const Icon(Icons.dashboard, color: EventHiveColors.accent),
+                child: const Icon(Icons.dashboard, color: EventHiveColors.primary),
               );
             },
           ),
@@ -111,7 +115,6 @@ class _AdminDashboardState extends State<AdminDashboard>
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 18,
-              letterSpacing: 1,
               color: EventHiveColors.text,
             ),
           ),
@@ -120,14 +123,17 @@ class _AdminDashboardState extends State<AdminDashboard>
       actions: [
         IconButton(
           onPressed: () {},
-          icon: const Icon(Icons.notifications_outlined,
-              color: EventHiveColors.text),
+          icon: Badge(
+            backgroundColor: EventHiveColors.accent,
+            label: const Text('3', style: TextStyle(color: Colors.white, fontSize: 10)),
+            child: const Icon(Icons.notifications_outlined, color: EventHiveColors.primary),
+          ),
         ),
         IconButton(
           onPressed: () {},
-          icon: const Icon(Icons.settings_outlined, color: EventHiveColors.text),
+          icon: const Icon(Icons.settings_outlined, color: EventHiveColors.primary),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
       ],
     );
   }
@@ -137,39 +143,60 @@ class _AdminDashboardState extends State<AdminDashboard>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: EventHiveColors.primaryLight.withOpacity(0.15),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: EventHiveColors.primaryLight.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  "Welcome Back",
+                  "Welcome Back, Admin!",
                   style: TextStyle(
                     color: EventHiveColors.primary,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
-                  "System Overview",
+                  "Dashboard Overview",
                   style: TextStyle(
                     color: EventHiveColors.text,
-                    fontSize: 26,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   "All systems running smoothly ✅",
                   style: TextStyle(
-                    color: EventHiveColors.secondaryLight,
+                    color: EventHiveColors.secondary,
                     fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: EventHiveColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "Last login: Today at 09:42 AM",
+                    style: TextStyle(
+                      color: EventHiveColors.primary,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
@@ -177,11 +204,17 @@ class _AdminDashboardState extends State<AdminDashboard>
           ),
           ScaleTransition(
             scale: _pulseAnimation,
-            child: CircleAvatar(
-              radius: 36,
-              backgroundColor: EventHiveColors.primary.withOpacity(0.2),
-              child: const Icon(Icons.admin_panel_settings,
-                  color: EventHiveColors.primary, size: 32),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: EventHiveColors.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.admin_panel_settings,
+                color: EventHiveColors.primary,
+                size: 36,
+              ),
             ),
           ),
         ],
@@ -193,26 +226,30 @@ class _AdminDashboardState extends State<AdminDashboard>
   Widget _buildAnalyticsGrid() {
     final stats = [
       {
-        "title": "Users",
+        "title": "Total Users",
         "value": "2,847",
-        "icon": Icons.people,
+        "change": "+12%",
+        "icon": Icons.people_outline,
         "color": EventHiveColors.primary
       },
       {
-        "title": "Events",
+        "title": "Active Events",
         "value": "156",
+        "change": "+5%",
         "icon": Icons.event,
         "color": EventHiveColors.secondary
       },
       {
         "title": "Revenue",
         "value": "\$24.8K",
-        "icon": Icons.monetization_on,
+        "change": "+23%",
+        "icon": Icons.monetization_on_outlined,
         "color": EventHiveColors.accent
       },
       {
         "title": "System Load",
         "value": "67%",
+        "change": "-3%",
         "icon": Icons.memory,
         "color": EventHiveColors.secondaryLight
       },
@@ -226,35 +263,65 @@ class _AdminDashboardState extends State<AdminDashboard>
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.4,
+        childAspectRatio: 1.2,
       ),
       itemBuilder: (context, i) {
         final stat = stats[i];
+        final isPositive = (stat["change"] as String).contains('+');
+
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: EventHiveColors.background,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: (stat["color"] as Color).withOpacity(0.4)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(stat["icon"] as IconData,
-                  color: stat["color"] as Color, size: 28),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: (stat["color"] as Color).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(stat["icon"] as IconData,
+                        color: stat["color"] as Color, size: 20),
+                  ),
+                  Text(
+                    stat["change"] as String,
+                    style: TextStyle(
+                      color: isPositive ? Colors.green : Colors.red,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
               const Spacer(),
               Text(
                 stat["value"] as String,
                 style: TextStyle(
-                    color: stat["color"] as Color,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold),
+                  color: stat["color"] as Color,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+              const SizedBox(height: 4),
               Text(
                 stat["title"] as String,
-                style: const TextStyle(
-                  color: EventHiveColors.text,
-                  fontSize: 13,
+                style: TextStyle(
+                  color: EventHiveColors.text.withOpacity(0.7),
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -266,30 +333,55 @@ class _AdminDashboardState extends State<AdminDashboard>
 
   /// Quick Actions
   Widget _buildQuickActionsRow() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildQuickAction("Add User", Icons.person_add, EventHiveColors.primary),
-        _buildQuickAction("Create Event", Icons.add_circle, EventHiveColors.accent),
-        _buildQuickAction("Reports", Icons.analytics, EventHiveColors.secondary),
+        _buildSectionTitle("Quick Actions"),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildQuickAction("Add User", Icons.person_add, EventHiveColors.primary),
+              const SizedBox(width: 12),
+              _buildQuickAction("Create Event", Icons.add_circle, EventHiveColors.accent),
+              const SizedBox(width: 12),
+              _buildQuickAction("Reports", Icons.analytics, EventHiveColors.secondary),
+              const SizedBox(width: 12),
+              _buildQuickAction("Settings", Icons.settings, EventHiveColors.secondaryLight),
+            ],
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildQuickAction(String title, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: color.withOpacity(0.1),
-            foregroundColor: color,
-            shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-          ),
-          onPressed: () {},
-          icon: Icon(icon, size: 20),
-          label: Text(title, style: const TextStyle(fontSize: 13)),
+    return Container(
+      width: 120,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color.withOpacity(0.1),
+          foregroundColor: color,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        ),
+        onPressed: () {},
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 24),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -297,61 +389,198 @@ class _AdminDashboardState extends State<AdminDashboard>
 
   /// Recent Activity
   Widget _buildRecentActivity() {
+    final activities = [
+      {
+        "title": "New user registered",
+        "subtitle": "John Doe joined the platform",
+        "time": "2m ago",
+        "icon": Icons.person_add,
+        "color": EventHiveColors.primary
+      },
+      {
+        "title": "Event approved",
+        "subtitle": "Tech Conference 2024 is now live",
+        "time": "5m ago",
+        "icon": Icons.event_available,
+        "color": EventHiveColors.accent
+      },
+      {
+        "title": "Payment processed",
+        "subtitle": "\$240.00 received for event ticket",
+        "time": "15m ago",
+        "icon": Icons.payment,
+        "color": Colors.green
+      },
+      {
+        "title": "Support ticket",
+        "subtitle": "New ticket #4872 from Sarah Johnson",
+        "time": "30m ago",
+        "icon": Icons.support_agent,
+        "color": EventHiveColors.secondary
+      },
+    ];
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: EventHiveColors.background,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: EventHiveColors.secondaryLight.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text("Recent Activity",
-              style: TextStyle(
-                  color: EventHiveColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15)),
-          SizedBox(height: 14),
-          ListTile(
-            leading: Icon(Icons.person_add, color: EventHiveColors.primary),
-            title: Text("New user registered",
-                style: TextStyle(color: EventHiveColors.text, fontSize: 14)),
-            subtitle: Text("2m ago",
-                style: TextStyle(color: EventHiveColors.secondaryLight, fontSize: 12)),
-          ),
-          ListTile(
-            leading: Icon(Icons.event_available, color: EventHiveColors.accent),
-            title: Text("Event approved",
-                style: TextStyle(color: EventHiveColors.text, fontSize: 14)),
-            subtitle: Text("5m ago",
-                style: TextStyle(color: EventHiveColors.secondaryLight, fontSize: 12)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
         ],
+      ),
+      child: Column(
+        children: activities.map((activity) {
+          return ListTile(
+            contentPadding: const EdgeInsets.symmetric(vertical: 4),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: (activity["color"] as Color).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(activity["icon"] as IconData,
+                  color: activity["color"] as Color, size: 20),
+            ),
+            title: Text(
+              activity["title"] as String,
+              style: const TextStyle(
+                color: EventHiveColors.text,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            subtitle: Text(
+              activity["subtitle"] as String,
+              style: TextStyle(
+                color: EventHiveColors.text.withOpacity(0.6),
+                fontSize: 12,
+              ),
+            ),
+            trailing: Text(
+              activity["time"] as String,
+              style: TextStyle(
+                color: EventHiveColors.text.withOpacity(0.5),
+                fontSize: 11,
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
   /// Performance Chart
-  Widget _buildPerformanceChart() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: EventHiveColors.background,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: EventHiveColors.secondaryLight.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text("Performance",
-              style: TextStyle(
-                  color: EventHiveColors.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15)),
-          SizedBox(height: 16),
-          Placeholder(fallbackHeight: 100, color: EventHiveColors.accent),
-        ],
+  // Widget _buildPerformanceChart() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(16),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.05),
+  //           blurRadius: 10,
+  //           offset: const Offset(0, 5),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             Text(
+  //               "System Performance",
+  //               style: TextStyle(
+  //                 color: EventHiveColors.text,
+  //                 fontWeight: FontWeight.w600,
+  //                 fontSize: 15,
+  //               ),
+  //             ),
+  //             Container(
+  //               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  //               decoration: BoxDecoration(
+  //                 color: Colors.green.withOpacity(0.1),
+  //                 borderRadius: BorderRadius.circular(12),
+  //               ),
+  //               child: Text(
+  //                 "Stable",
+  //                 style: TextStyle(
+  //                   color: Colors.green,
+  //                   fontSize: 12,
+  //                   fontWeight: FontWeight.w500,
+  //                 ),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 16),
+  //         Container(
+  //           height: 120,
+  //           decoration: BoxDecoration(
+  //             color: EventHiveColors.background,
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           // child: Center(
+  //           //   child: Text(
+  //           //     "Performance Chart",
+  //           //     style: TextStyle(
+  //           //       color: EventHiveColors.text.withOpacity(0.5),
+  //           //     ),
+  //           //   ),
+  //           // ),
+  //         ),
+  //         // const SizedBox(height: 16),
+  //         // Row(
+  //         //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //         //   children: [
+  //         //     _buildMetric("CPU", "42%", EventHiveColors.primary),
+  //         //     _buildMetric("Memory", "67%", EventHiveColors.accent),
+  //         //     _buildMetric("Storage", "38%", EventHiveColors.secondary),
+  //         //     _buildMetric("Network", "24%", EventHiveColors.secondaryLight),
+  //         //   ],
+  //         // ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildMetric(String title, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: EventHiveColors.text.withOpacity(0.7),
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        color: EventHiveColors.text,
+        fontWeight: FontWeight.w600,
+        fontSize: 16,
       ),
     );
   }

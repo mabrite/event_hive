@@ -25,13 +25,13 @@ class _FiltersScreenState extends State<FiltersScreen>
     FilterCategory(
       name: 'Sports',
       icon: Icons.sports_soccer,
-      color: EventHiveColors.primary,
+      color: EventHiveColors.accent,
       isSelected: false,
     ),
     FilterCategory(
       name: 'Music',
       icon: Icons.music_note,
-      color: EventHiveColors.accent,
+      color: EventHiveColors.primaryLight,
       isSelected: false,
     ),
     FilterCategory(
@@ -43,31 +43,31 @@ class _FiltersScreenState extends State<FiltersScreen>
     FilterCategory(
       name: 'Food',
       icon: Icons.restaurant,
-      color: Colors.deepOrange,
+      color: EventHiveColors.accentLight,
       isSelected: false,
     ),
     FilterCategory(
       name: 'Travel',
       icon: Icons.flight,
-      color: Colors.cyan,
+      color: EventHiveColors.primary,
       isSelected: false,
     ),
     FilterCategory(
       name: 'Tech',
       icon: Icons.computer,
-      color: EventHiveColors.primaryLight,
+      color: EventHiveColors.secondaryLight,
       isSelected: false,
     ),
     FilterCategory(
       name: 'Fashion',
       icon: Icons.checkroom,
-      color: Colors.pink,
+      color: EventHiveColors.primary,
       isSelected: false,
     ),
     FilterCategory(
       name: 'Books',
       icon: Icons.menu_book,
-      color: Colors.green,
+      color: EventHiveColors.accent,
       isSelected: false,
     ),
   ];
@@ -190,9 +190,9 @@ class _FiltersScreenState extends State<FiltersScreen>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              EventHiveColors.secondary,
-              EventHiveColors.primary,
-              EventHiveColors.accent,
+              EventHiveColors.primary.withOpacity(0.9),
+              EventHiveColors.primary.withOpacity(0.7),
+              EventHiveColors.secondary.withOpacity(0.8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -210,8 +210,8 @@ class _FiltersScreenState extends State<FiltersScreen>
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: CircleAvatar(
-                          backgroundColor: EventHiveColors.primary.withOpacity(0.2),
-                          child: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          child: Icon(Icons.arrow_back_ios, color: EventHiveColors.background, size: 20),
                         ),
                       ),
                       const SizedBox(width: 20),
@@ -230,7 +230,7 @@ class _FiltersScreenState extends State<FiltersScreen>
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: EventHiveColors.accent.withOpacity(0.2),
+                            color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -253,7 +253,7 @@ class _FiltersScreenState extends State<FiltersScreen>
                   child: Container(
                     margin: const EdgeInsets.only(top: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: EventHiveColors.background,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(30),
                         topRight: Radius.circular(30),
@@ -338,12 +338,12 @@ class _FiltersScreenState extends State<FiltersScreen>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(
-        color: EventHiveColors.background.withOpacity(isSearchFocused ? 0.15 : 0.08),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isSearchFocused
               ? EventHiveColors.primary.withOpacity(0.5)
-              : Colors.white.withOpacity(0.1),
+              : Colors.grey.withOpacity(0.3),
           width: isSearchFocused ? 2 : 1,
         ),
       ),
@@ -351,11 +351,11 @@ class _FiltersScreenState extends State<FiltersScreen>
         onChanged: (value) => setState(() => searchText = value),
         onTap: () => setState(() => isSearchFocused = true),
         onEditingComplete: () => setState(() => isSearchFocused = false),
-        style: TextStyle(color: EventHiveColors.background),
+        style: TextStyle(color: EventHiveColors.text),
         decoration: InputDecoration(
           hintText: 'Search anything...',
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
-          prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
+          hintStyle: TextStyle(color: EventHiveColors.text.withOpacity(0.5)),
+          prefixIcon: Icon(Icons.search, color: EventHiveColors.text.withOpacity(0.6)),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
@@ -369,7 +369,7 @@ class _FiltersScreenState extends State<FiltersScreen>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: EventHiveColors.primary.withOpacity(0.2),
+            color: EventHiveColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: EventHiveColors.primary, size: 20),
@@ -378,7 +378,7 @@ class _FiltersScreenState extends State<FiltersScreen>
         Text(
           title,
           style: TextStyle(
-            color: EventHiveColors.background,
+            color: EventHiveColors.text,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -406,19 +406,23 @@ class _FiltersScreenState extends State<FiltersScreen>
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: category.isSelected
-                  ? LinearGradient(colors: [category.color, category.color.withOpacity(0.7)])
-                  : LinearGradient(colors: [
-                Colors.white.withOpacity(0.08),
-                Colors.white.withOpacity(0.04),
-              ]),
+              color: category.isSelected
+                  ? category.color
+                  : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: category.isSelected
                     ? category.color
-                    : Colors.white.withOpacity(0.1),
+                    : Colors.grey.withOpacity(0.3),
                 width: category.isSelected ? 2 : 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -426,7 +430,7 @@ class _FiltersScreenState extends State<FiltersScreen>
                   category.icon,
                   color: category.isSelected
                       ? Colors.white
-                      : Colors.white.withOpacity(0.7),
+                      : EventHiveColors.text.withOpacity(0.7),
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -436,7 +440,7 @@ class _FiltersScreenState extends State<FiltersScreen>
                     style: TextStyle(
                       color: category.isSelected
                           ? Colors.white
-                          : Colors.white.withOpacity(0.8),
+                          : EventHiveColors.text,
                       fontSize: 14,
                       fontWeight: category.isSelected
                           ? FontWeight.bold
@@ -467,20 +471,27 @@ class _FiltersScreenState extends State<FiltersScreen>
             decoration: BoxDecoration(
               color: price.isSelected
                   ? EventHiveColors.primary
-                  : Colors.white.withOpacity(0.08),
+                  : Colors.white,
               borderRadius: BorderRadius.circular(25),
               border: Border.all(
                 color: price.isSelected
                     ? EventHiveColors.primary
-                    : Colors.white.withOpacity(0.2),
+                    : Colors.grey.withOpacity(0.3),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Text(
               price.label,
               style: TextStyle(
                 color: price.isSelected
                     ? Colors.white
-                    : Colors.white.withOpacity(0.8),
+                    : EventHiveColors.text,
                 fontWeight: price.isSelected ? FontWeight.bold : FontWeight.w500,
               ),
             ),
@@ -494,24 +505,42 @@ class _FiltersScreenState extends State<FiltersScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: EventHiveColors.primary,
-              inactiveTrackColor: Colors.white.withOpacity(0.2),
-              thumbColor: EventHiveColors.accent,
+              inactiveTrackColor: Colors.grey.withOpacity(0.3),
+              thumbColor: EventHiveColors.primary,
               overlayColor: EventHiveColors.primary.withOpacity(0.2),
+              valueIndicatorColor: EventHiveColors.primary,
+              activeTickMarkColor: Colors.white,
             ),
             child: Slider(
               value: _currentRating,
               min: 0,
               max: 5,
               divisions: 5,
+              label: _currentRating.toStringAsFixed(1),
               onChanged: (value) => setState(() => _currentRating = value),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Rating: ${_currentRating.toStringAsFixed(1)}',
+            style: TextStyle(
+              color: EventHiveColors.text,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -523,24 +552,44 @@ class _FiltersScreenState extends State<FiltersScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: EventHiveColors.primary,
-              inactiveTrackColor: Colors.white.withOpacity(0.2),
-              thumbColor: EventHiveColors.accent,
+              inactiveTrackColor: Colors.grey.withOpacity(0.3),
+              thumbColor: EventHiveColors.primary,
               overlayColor: EventHiveColors.primary.withOpacity(0.2),
+              rangeThumbShape: RoundRangeSliderThumbShape(enabledThumbRadius: 8),
             ),
             child: RangeSlider(
               values: _distanceRange,
               min: 0,
               max: 100,
               divisions: 20,
+              labels: RangeLabels(
+                '${_distanceRange.start.round()} km',
+                '${_distanceRange.end.round()} km',
+              ),
               onChanged: (values) => setState(() => _distanceRange = values),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Distance: ${_distanceRange.start.round()} - ${_distanceRange.end.round()} km',
+            style: TextStyle(
+              color: EventHiveColors.text,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

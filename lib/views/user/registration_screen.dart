@@ -1,4 +1,3 @@
-import 'package:event_hive/views/user/registration_screen.dart';
 import 'package:flutter/material.dart';
 import '../filters_screen.dart';
 import '../notifications_screen.dart';
@@ -9,6 +8,343 @@ class Home extends StatefulWidget {
 
   @override
   HomeState createState() => HomeState();
+}
+
+// Registration Screen Class
+class EventRegistrationScreen extends StatefulWidget {
+  final Map<String, String> event;
+
+  const EventRegistrationScreen({super.key, required this.event});
+
+  @override
+  EventRegistrationScreenState createState() => EventRegistrationScreenState();
+}
+
+class EventRegistrationScreenState extends State<EventRegistrationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  int _ticketCount = 1;
+  String _selectedPaymentMethod = 'card';
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  void _submitRegistration() {
+    if (_formKey.currentState!.validate()) {
+      // Process registration
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Registration Successful'),
+            content: Text('You have successfully registered for ${widget.event['title']}'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(context); // Return to home
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Register for ${widget.event['title']}'),
+        backgroundColor: EventHiveColors.primary,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Event summary
+            _buildEventSummary(),
+            const SizedBox(height: 24),
+
+            // Registration form
+            Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Attendee Information',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: EventHiveColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Name field
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Full Name',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.person),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your name';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Email field
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email Address',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Phone field
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone Number',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.phone),
+                    ),
+                    keyboardType: TextInputType.phone,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your phone number';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Ticket quantity
+                  const Text(
+                    'Number of Tickets',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: EventHiveColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          if (_ticketCount > 1) {
+                            setState(() {
+                              _ticketCount--;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.remove),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.grey[200],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        '$_ticketCount',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _ticketCount++;
+                          });
+                        },
+                        icon: const Icon(Icons.add),
+                        style: IconButton.styleFrom(
+                          backgroundColor: EventHiveColors.primaryLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Payment method
+                  const Text(
+                    'Payment Method',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: EventHiveColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _selectedPaymentMethod,
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'card',
+                        child: Text('Credit/Debit Card'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'mobile',
+                        child: Text('Mobile Money'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'bank',
+                        child: Text('Bank Transfer'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedPaymentMethod = value!;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Submit button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _submitRegistration,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: EventHiveColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Complete Registration',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventSummary() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              widget.event['image']!,
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.event['title']!,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: EventHiveColors.text,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 16,
+                      color: EventHiveColors.secondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${widget.event['date']} ${widget.event['month']}',
+                      style: const TextStyle(
+                        color: EventHiveColors.secondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: EventHiveColors.secondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.event['fullLocation']!,
+                        style: const TextStyle(
+                          color: EventHiveColors.secondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class HomeState extends State<Home> {
@@ -227,6 +563,16 @@ class HomeState extends State<Home> {
     );
   }
 
+  // Navigation method to registration screen
+  void _navigateToRegistration(Map<String, String> event) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EventRegistrationScreen(event: event),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -327,24 +673,7 @@ class HomeState extends State<Home> {
                               width: screenWidth * 0.45,
                               child: InkWell(
                                 onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${event['title']} clicked'),
-                                      action: SnackBarAction(
-                                        label: 'View Details',
-                                        onPressed: () {
-                                          // Add navigation to event details
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => EventRegistrationScreen(event: event),
-                                            ),
-                                          );
-
-                                        },
-                                      ),
-                                    ),
-                                  );
+                                  _navigateToRegistration(event);
                                 },
                                 child: _buildEventCard(event),
                               ),

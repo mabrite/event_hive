@@ -98,7 +98,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       style: TextStyle(color: EventHiveColors.text),
                     ),
                     TextSpan(
-                      text: "Hive",
+                      text: "Hives",
                       style: TextStyle(color: EventHiveColors.accent),
                     ),
                   ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../themes/colors.dart'; // Assuming colors.dart is in the same directory
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -197,46 +198,33 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     final unreadCount = notifications.where((n) => !n.isRead).length;
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A1A2E),
-              Color(0xFF16213E),
-              Color(0xFF0F3460),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header Section
-              ScaleTransition(
-                scale: _headerScaleAnimation,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: _buildHeader(unreadCount),
-                ),
-              ),
-
-              // Filter Section
-              FadeTransition(
+      backgroundColor: EventHiveColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header Section
+            ScaleTransition(
+              scale: _headerScaleAnimation,
+              child: FadeTransition(
                 opacity: _fadeAnimation,
-                child: _buildFilterSection(),
+                child: _buildHeader(unreadCount),
               ),
+            ),
 
-              // Notifications List
-              Expanded(
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: _buildNotificationsList(),
-                ),
+            // Filter Section
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: _buildFilterSection(),
+            ),
+
+            // Notifications List
+            Expanded(
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: _buildNotificationsList(),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -245,6 +233,20 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   Widget _buildHeader(int unreadCount) {
     return Container(
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           // Top Row
@@ -255,15 +257,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: EventHiveColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                    ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_back_ios,
-                    color: Colors.white,
+                    color: EventHiveColors.primary,
                     size: 20,
                   ),
                 ),
@@ -273,7 +272,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 child: Text(
                   'Notifications',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: EventHiveColors.text,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
@@ -288,16 +287,13 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6C63FF).withOpacity(0.2),
+                      color: EventHiveColors.accent.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: const Color(0xFF6C63FF).withOpacity(0.3),
-                      ),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Mark All Read',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: EventHiveColors.accent,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -315,14 +311,14 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 'Total',
                 notifications.length.toString(),
                 Icons.notifications,
-                const Color(0xFF6C63FF),
+                EventHiveColors.primary,
               ),
               const SizedBox(width: 16),
               _buildStatCard(
                 'Unread',
                 unreadCount.toString(),
                 Icons.notifications_active,
-                const Color(0xFFFF6B9D),
+                EventHiveColors.accent,
               ),
               const SizedBox(width: 16),
               _buildStatCard(
@@ -330,7 +326,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 notifications.where((n) =>
                 n.time.contains('min ago') || n.time.contains('hour')).length.toString(),
                 Icons.today,
-                const Color(0xFF26D0CE),
+                EventHiveColors.secondary,
               ),
             ],
           ),
@@ -346,9 +342,6 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-          ),
         ),
         child: Column(
           children: [
@@ -365,7 +358,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             Text(
               label,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: EventHiveColors.text.withOpacity(0.7),
                 fontSize: 12,
               ),
             ),
@@ -379,7 +372,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     final filters = ['All', 'Event', 'Social', 'Message', 'System'];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      color: Colors.white,
       child: Column(
         children: [
           // Filter Chips
@@ -391,37 +385,16 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 final isSelected = _selectedFilter == filter;
                 return Padding(
                   padding: const EdgeInsets.only(right: 12),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedFilter = filter),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF6C63FF)
-                            : Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFF6C63FF)
-                              : Colors.white.withOpacity(0.2),
-                        ),
-                      ),
-                      child: Text(
-                        filter,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : Colors.white.withOpacity(0.8),
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w500,
-                        ),
-                      ),
+                  child: FilterChip(
+                    label: Text(filter),
+                    selected: isSelected,
+                    onSelected: (selected) => setState(() => _selectedFilter = filter),
+                    selectedColor: EventHiveColors.primary,
+                    backgroundColor: EventHiveColors.background,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : EventHiveColors.text,
                     ),
+                    checkmarkColor: Colors.white,
                   ),
                 );
               }).toList(),
@@ -432,34 +405,16 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           // Unread Only Toggle
           Row(
             children: [
-              GestureDetector(
-                onTap: () => setState(() => _showUnreadOnly = !_showUnreadOnly),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: _showUnreadOnly
-                        ? const Color(0xFF6C63FF)
-                        : Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _showUnreadOnly
-                          ? const Color(0xFF6C63FF)
-                          : Colors.white.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Icon(
-                    _showUnreadOnly ? Icons.check : Icons.close,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
+              Switch(
+                value: _showUnreadOnly,
+                onChanged: (value) => setState(() => _showUnreadOnly = value),
+                activeColor: EventHiveColors.primary,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Text(
                 'Show unread only',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: EventHiveColors.text,
                   fontSize: 14,
                 ),
               ),
@@ -474,71 +429,49 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     final filtered = filteredNotifications;
 
     if (filtered.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.notifications_off,
-              size: 80,
-              color: Colors.white.withOpacity(0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No notifications found',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+      return Container(
+        color: EventHiveColors.background,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.notifications_off,
+                size: 80,
+                color: EventHiveColors.secondary.withOpacity(0.4),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Try adjusting your filters',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.4),
-                fontSize: 14,
+              const SizedBox(height: 16),
+              Text(
+                'No notifications found',
+                style: TextStyle(
+                  color: EventHiveColors.text.withOpacity(0.6),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                'Try adjusting your filters',
+                style: TextStyle(
+                  color: EventHiveColors.text.withOpacity(0.4),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return Container(
-      margin: const EdgeInsets.only(top: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        ),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        ),
-        child: ListView.builder(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          itemCount: filtered.length,
-          itemBuilder: (context, index) {
-            return AnimationConfiguration.staggeredList(
-              position: index,
-              duration: const Duration(milliseconds: 400),
-              child: SlideAnimation(
-                verticalOffset: 50.0,
-                child: FadeInAnimation(
-                  child: _buildNotificationCard(filtered[index], index),
-                ),
-              ),
-            );
-          },
-        ),
+      color: EventHiveColors.background,
+      child: ListView.builder(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: filtered.length,
+        itemBuilder: (context, index) {
+          return _buildNotificationCard(filtered[index], index);
+        },
       ),
     );
   }
@@ -554,7 +487,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: Colors.red.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: const Icon(
           Icons.delete,
@@ -566,17 +499,22 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         onTap: () => _markAsRead(notification.id),
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: notification.isRead
-                ? Colors.white.withOpacity(0.05)
-                : Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
             border: Border.all(
               color: notification.isRead
-                  ? Colors.white.withOpacity(0.1)
+                  ? Colors.transparent
                   : _getNotificationColor(notification.type).withOpacity(0.3),
-              width: notification.isRead ? 1 : 2,
+              width: notification.isRead ? 0 : 2,
             ),
           ),
           child: Row(
@@ -585,8 +523,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _getNotificationColor(notification.type).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
+                  color: _getNotificationColor(notification.type).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   _getNotificationIcon(notification.type),
@@ -607,7 +545,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                           child: Text(
                             notification.title,
                             style: TextStyle(
-                              color: Colors.white,
+                              color: EventHiveColors.text,
                               fontSize: 16,
                               fontWeight: notification.isRead
                                   ? FontWeight.w500
@@ -630,7 +568,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     Text(
                       notification.message,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: EventHiveColors.text.withOpacity(0.7),
                         fontSize: 14,
                       ),
                       maxLines: 2,
@@ -642,13 +580,13 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         Icon(
                           Icons.access_time,
                           size: 12,
-                          color: Colors.white.withOpacity(0.5),
+                          color: EventHiveColors.text.withOpacity(0.5),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           notification.time,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: EventHiveColors.text.withOpacity(0.5),
                             fontSize: 12,
                           ),
                         ),
@@ -680,7 +618,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         text = 'Medium';
         break;
       case NotificationPriority.low:
-        color = Colors.green;
+        color = EventHiveColors.secondary;
         text = 'Low';
         break;
     }
@@ -688,7 +626,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: color.withOpacity(0.3),
@@ -708,17 +646,17 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   Color _getNotificationColor(NotificationType type) {
     switch (type) {
       case NotificationType.event:
-        return const Color(0xFF6C63FF);
+        return EventHiveColors.primary;
       case NotificationType.social:
-        return const Color(0xFFFF6B9D);
+        return EventHiveColors.accent;
       case NotificationType.message:
-        return const Color(0xFF26D0CE);
+        return EventHiveColors.primaryLight;
       case NotificationType.reminder:
-        return const Color(0xFFFFD700);
+        return Colors.amber;
       case NotificationType.location:
-        return const Color(0xFF4C9EF8);
+        return EventHiveColors.secondaryLight;
       case NotificationType.system:
-        return const Color(0xFF9B59B6);
+        return EventHiveColors.secondary;
     }
   }
 
@@ -774,45 +712,4 @@ enum NotificationPriority {
   low,
   medium,
   high,
-}
-
-// Animation Helpers (you'll need to add staggered_animations package)
-class AnimationConfiguration {
-  static Widget staggeredList({
-    required int position,
-    required Duration duration,
-    required Widget child,
-  }) {
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 100 * position),
-      child: child,
-    );
-  }
-}
-
-class SlideAnimation extends StatelessWidget {
-  final double verticalOffset;
-  final Widget child;
-
-  const SlideAnimation({
-    super.key,
-    required this.verticalOffset,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
-  }
-}
-
-class FadeInAnimation extends StatelessWidget {
-  final Widget child;
-
-  const FadeInAnimation({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
-  }
 }
