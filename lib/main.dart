@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart' show Firebase, FirebaseOptions;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../themes/colors.dart';
 
@@ -24,7 +26,24 @@ import 'views/organizer/organizer_users.dart';
 // Splash
 import 'views/splash_screen.dart'; // ✅ import splash
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyAeYxcFiWGCneHYo3MioF3SJ83DMhQW8Cw",
+        authDomain: "eventhives.firebaseapp.com",
+        projectId: "eventhives",
+        storageBucket: "eventhives.firebasestorage.app",
+        messagingSenderId: "350197577567",
+        appId: "1:350197577567:web:f80dfc88111116aa0268ea",
+        measurementId: "G-1Y8VVNK1H5",
+      ),
+    );
+  } else {
+    await Firebase.initializeApp();
+  }
+
   runApp(const EventHivesApp());
 }
 

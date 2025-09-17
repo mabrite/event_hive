@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../themes/colors.dart';
 import '../auth/user_login.dart';
 import '../settings/edit_profile_screen.dart';
@@ -14,6 +17,8 @@ class UserProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -34,22 +39,43 @@ class UserProfile extends StatelessWidget {
             children: [
               _buildHeader(context),
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      Hero(tag: "profile-avatar", child: _buildProfileImage()),
-                      const SizedBox(height: 20),
-                      _buildUserName(),
-                      const SizedBox(height: 15),
-                      _buildUserStats(),
-                      const SizedBox(height: 30),
-                      _buildSettingsSection(context),
-                      const SizedBox(height: 30),
-                      _buildLogoutButton(context),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
+                child: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection("users")
+                      .doc(currentUser?.uid)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (!snapshot.hasData || !snapshot.data!.exists) {
+                      return const Center(child: Text("No user data found"));
+                    }
+
+                    final userData =
+                    snapshot.data!.data() as Map<String, dynamic>;
+
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          Hero(
+                            tag: "profile-avatar",
+                            child: _buildProfileImage(userData['photoUrl']),
+                          ),
+                          const SizedBox(height: 20),
+                          _buildUserName(userData['name'] ?? "Guest User"),
+                          const SizedBox(height: 15),
+                          _buildUserStats(currentUser!.uid),
+                          const SizedBox(height: 30),
+                          _buildSettingsSection(context),
+                          const SizedBox(height: 30),
+                          _buildLogoutButton(context),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -111,7 +137,7 @@ class UserProfile extends StatelessWidget {
   }
 
   /// ---------- PROFILE IMAGE ----------
-  Widget _buildProfileImage() {
+  Widget _buildProfileImage(String? photoUrl) {
     return AnimatedContainer(
       duration: const Duration(seconds: 2),
       curve: Curves.easeInOut,
@@ -129,20 +155,26 @@ class UserProfile extends StatelessWidget {
             spreadRadius: 3,
           ),
         ],
+        image: photoUrl != null && photoUrl.isNotEmpty
+            ? DecorationImage(
+            image: NetworkImage(photoUrl), fit: BoxFit.cover)
+            : null,
       ),
-      child: const Icon(
+      child: photoUrl == null || photoUrl.isEmpty
+          ? const Icon(
         Icons.person,
         color: EventHiveColors.primary,
         size: 60,
-      ),
+      )
+          : null,
     );
   }
 
   /// ---------- USER NAME ----------
-  Widget _buildUserName() {
-    return const Text(
-      "Zigah Mabel",
-      style: TextStyle(
+  Widget _buildUserName(String name) {
+    return Text(
+      name,
+      style: const TextStyle(
         color: Colors.white,
         fontSize: 28,
         fontWeight: FontWeight.bold,
@@ -152,25 +184,35 @@ class UserProfile extends StatelessWidget {
   }
 
   /// ---------- USER STATS ----------
-  Widget _buildUserStats() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40),
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildStatItem("Events", "12"),
-          _divider(),
-          _buildStatItem("Following", "45"),
-          _divider(),
-          _buildStatItem("Followers", "108"),
-        ],
-      ),
+  Widget _buildUserStats(String userId) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection("events")
+          .where("attendees", arrayContains: userId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        int eventsCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 40),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildStatItem("Events", eventsCount.toString()),
+              _divider(),
+              _buildStatItem("Following", "0"), // implement later
+              _divider(),
+              _buildStatItem("Followers", "0"), // implement later
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -299,7 +341,8 @@ class UserProfile extends StatelessWidget {
           color: EventHiveColors.text,
         ),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: EventHiveColors.primary),
+      trailing: const Icon(Icons.arrow_forward_ios,
+          size: 16, color: EventHiveColors.primary),
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => page),
@@ -323,7 +366,12 @@ class UserProfile extends StatelessWidget {
       width: double.infinity,
       height: 55,
       child: ElevatedButton.icon(
-        onPressed: () {
+        onPressed: () async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('isLoggedIn');
+          await prefs.remove('stay_signed_in');
+          await FirebaseAuth.instance.signOut();
+
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
@@ -335,7 +383,8 @@ class UserProfile extends StatelessWidget {
         icon: const Icon(Icons.logout_rounded, size: 20, color: Colors.white),
         label: const Text(
           "Logout",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+          style: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 20),

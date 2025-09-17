@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../themes/colors.dart'; // import your EventHiveColors
 
 class UserFeedback extends StatefulWidget {
@@ -22,6 +24,7 @@ class _UserFeedbackState extends State<UserFeedback> {
   ];
 
   final Set<String> selectedTags = {};
+  bool _isSubmitting = false;
 
   void _toggleTag(String tag) {
     setState(() {
@@ -33,30 +36,51 @@ class _UserFeedbackState extends State<UserFeedback> {
     });
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (selectedStars == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text("Please rate your experience before submitting.")),
+          content: Text("Please rate your experience before submitting."),
+        ),
+      );
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("You must be logged in to submit feedback.")),
       );
       return;
     }
 
     final feedbackData = {
+      "userId": user.uid,
+      "email": user.email,
       "rating": selectedStars,
       "tags": selectedTags.toList(),
       "comments": _controller.text.trim(),
-      "submittedAt": DateTime.now().toIso8601String(),
+      "submittedAt": FieldValue.serverTimestamp(),
     };
 
-    // Example: send this data to backend or Firebase
-    print("Feedback Submitted: $feedbackData");
+    setState(() => _isSubmitting = true);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Thanks for your feedback!")),
-    );
+    try {
+      await FirebaseFirestore.instance.collection("feedback").add(feedbackData);
 
-    Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Thanks for your feedback!")),
+      );
+
+      // Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    } finally {
+      setState(() => _isSubmitting = false);
+    }
   }
 
   Widget _buildStar(int index) {
@@ -173,8 +197,9 @@ class _UserFeedbackState extends State<UserFeedback> {
                     child: FilterChip(
                       label: Text(tag),
                       labelStyle: TextStyle(
-                        color:
-                        isSelected ? Colors.white : EventHiveColors.text,
+                        color: isSelected
+                            ? Colors.white
+                            : EventHiveColors.text,
                         fontWeight: FontWeight.w600,
                       ),
                       selected: isSelected,
@@ -244,7 +269,7 @@ class _UserFeedbackState extends State<UserFeedback> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _submit,
+                  onPressed: _isSubmitting ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: EventHiveColors.primary,
                     foregroundColor: Colors.white,
@@ -255,7 +280,11 @@ class _UserFeedbackState extends State<UserFeedback> {
                     elevation: 6,
                     shadowColor: Colors.black45,
                   ),
-                  child: const Text(
+                  child: _isSubmitting
+                      ? const CircularProgressIndicator(
+                    color: Colors.white,
+                  )
+                      : const Text(
                     "Submit Feedback",
                     style: TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),

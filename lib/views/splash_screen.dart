@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../themes/colors.dart';
-import '../main.dart'; // to navigate into LandingPage
+import '../main.dart';
+import 'organizer/organizer_dashboard.dart'; // LandingPage
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -24,13 +26,36 @@ class _SplashScreenState extends State<SplashScreen> {
       });
     });
 
-    // Navigate after 3 seconds
-    Timer(const Duration(seconds: 3), () {
+    _navigateNext();
+  }
+
+  Future<void> _navigateNext() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final role = prefs.getString('role') ?? 'User';
+
+    // Wait for 3 seconds splash duration
+    await Future.delayed(const Duration(seconds: 3));
+
+    if (isLoggedIn) {
+      // Redirect based on role
+      if (role == 'Admin') {
+        Navigator.pushReplacementNamed(context, '/admin');
+      } else if (role == 'Organizer') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OrganizerDashboard()),
+        );
+      } else {
+        Navigator.pushReplacementNamed(context, '/user');
+      }
+    } else {
+      // First-time users go to landing
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LandingPage()),
       );
-    });
+    }
   }
 
   @override

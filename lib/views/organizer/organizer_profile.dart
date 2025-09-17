@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../themes/colors.dart';
 
 class OrganizerProfile extends StatefulWidget {
@@ -9,12 +12,15 @@ class OrganizerProfile extends StatefulWidget {
 }
 
 class _OrganizerProfileState extends State<OrganizerProfile> {
-  String name = "Alex Organizer";
-  String email = "alex.organizer@example.com";
-  String phone = "+233 55 123 4567";
-  String organization = "EventHive Solutions";
+  String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
+
+  String name = "";
+  String email = "";
+  String phone = "";
+  String organization = "";
 
   bool isEditing = false;
+  bool isLoading = true;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -24,10 +30,42 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
   @override
   void initState() {
     super.initState();
-    _nameController.text = name;
-    _emailController.text = email;
-    _phoneController.text = phone;
-    _organizationController.text = organization;
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    if (userId.isEmpty) return;
+
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .get();
+
+      if (doc.exists) {
+        var data = doc.data() as Map<String, dynamic>;
+        setState(() {
+          name = data["name"] ?? "";
+          email = data["email"] ?? "";
+          phone = data["phone"] ?? "";
+          organization = data["organization"] ?? "";
+
+          _nameController.text = name;
+          _emailController.text = email;
+          _phoneController.text = phone;
+          _organizationController.text = organization;
+
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("⚠️ Failed to load profile: $e")),
+      );
+    }
   }
 
   void _toggleEdit() {
@@ -36,21 +74,41 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
     });
   }
 
-  void _saveProfile() {
-    setState(() {
-      name = _nameController.text;
-      email = _emailController.text;
-      phone = _phoneController.text;
-      organization = _organizationController.text;
-      isEditing = false;
-    });
+  Future<void> _saveProfile() async {
+    if (userId.isEmpty) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("✅ Profile updated successfully")),
-    );
+    try {
+      await FirebaseFirestore.instance.collection("organizers").doc(userId).set({
+        "name": _nameController.text,
+        "email": _emailController.text,
+        "phone": _phoneController.text,
+        "organization": _organizationController.text,
+      }, SetOptions(merge: true));
+
+      setState(() {
+        name = _nameController.text;
+        email = _emailController.text;
+        phone = _phoneController.text;
+        organization = _organizationController.text;
+        isEditing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("✅ Profile updated successfully")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("⚠️ Update failed: $e")),
+      );
+    }
   }
 
-  void _logout() {
+  void _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('isLoggedIn');
+    await prefs.remove('role');
+
+    await FirebaseAuth.instance.signOut();
     Navigator.pushNamedAndRemoveUntil(
       context,
       '/login_organizer',
@@ -68,24 +126,30 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
         foregroundColor: Colors.white,
         elevation: 4,
         actions: [
-          IconButton(
-            icon: Icon(isEditing ? Icons.save_rounded : Icons.edit_rounded),
-            onPressed: isEditing ? _saveProfile : _toggleEdit,
-          ),
+          if (!isLoading)
+            IconButton(
+              icon: Icon(isEditing ? Icons.save_rounded : Icons.edit_rounded),
+              onPressed: isEditing ? _saveProfile : _toggleEdit,
+            ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // Avatar with gradient ring
+            // Avatar
             Center(
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [EventHiveColors.primary, EventHiveColors.accent],
+                    colors: [
+                      EventHiveColors.primary,
+                      EventHiveColors.accent
+                    ],
                   ),
                 ),
                 child: CircleAvatar(
@@ -107,7 +171,8 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
               child: Card(
                 key: ValueKey(isEditing),
                 elevation: 6,
-                shadowColor: EventHiveColors.secondary.withOpacity(0.3),
+                shadowColor:
+                EventHiveColors.secondary.withOpacity(0.3),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -115,10 +180,14 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
                   padding: const EdgeInsets.all(18),
                   child: Column(
                     children: [
-                      _buildProfileField("Full Name", _nameController, isEditing),
-                      _buildProfileField("Email", _emailController, isEditing),
-                      _buildProfileField("Phone", _phoneController, isEditing),
-                      _buildProfileField("Organization", _organizationController, isEditing),
+                      _buildProfileField(
+                          "Full Name", _nameController, isEditing),
+                      _buildProfileField(
+                          "Email", _emailController, isEditing),
+                      _buildProfileField(
+                          "Phone", _phoneController, isEditing),
+                      _buildProfileField("Organization",
+                          _organizationController, isEditing),
                     ],
                   ),
                 ),
@@ -127,11 +196,12 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
 
             const SizedBox(height: 40),
 
-            // Logout Button
+            // Logout
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: EventHiveColors.accent,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 28, vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -140,7 +210,10 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
               icon: const Icon(Icons.logout_rounded, color: Colors.white),
               label: const Text(
                 "Logout",
-                style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold),
               ),
               onPressed: _logout,
             ),
@@ -164,7 +237,8 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
           labelStyle: TextStyle(color: EventHiveColors.secondary),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: EventHiveColors.primary, width: 1.5),
+            borderSide: BorderSide(
+                color: EventHiveColors.primary, width: 1.5),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -186,7 +260,8 @@ class _OrganizerProfileState extends State<OrganizerProfile> {
           const SizedBox(height: 6),
           Text(
             controller.text,
-            style: TextStyle(fontSize: 16, color: EventHiveColors.text),
+            style: TextStyle(
+                fontSize: 16, color: EventHiveColors.text),
           ),
         ],
       ),

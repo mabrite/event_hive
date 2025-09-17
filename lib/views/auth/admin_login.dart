@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../themes/colors.dart'; // Import EventHiveColors
 
 class AdminLogin extends StatefulWidget {
@@ -16,36 +19,70 @@ class _AdminLoginState extends State<AdminLogin> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
-  void _loginAdmin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      HapticFeedback.lightImpact();
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) {
-        setState(() => _isLoading = false);
-        HapticFeedback.heavyImpact();
-        Navigator.pushReplacementNamed(context, '/admin');
-      }
-    } else {
-      HapticFeedback.selectionClick();
-    }
-  }
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void _loginWithGoogle() async {
+  Future<void> _loginAdmin() async {
+    if (!_formKey.currentState!.validate()) {
+      HapticFeedback.selectionClick();
+      return;
+    }
+
     setState(() => _isLoading = true);
     HapticFeedback.lightImpact();
-    await Future.delayed(const Duration(seconds: 3));
-    if (mounted) {
-      setState(() => _isLoading = false);
-      HapticFeedback.heavyImpact();
-      Navigator.pushReplacementNamed(context, '/admin');
+
+    try {
+      // 🔑 Firebase Auth Login
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: _emailCtrl.text.trim(),
+        password: _passwordCtrl.text.trim(),
+      );
+      User? user = userCredential.user;
+
+      if (user == null) throw Exception("No user found");
+
+      // 🔍 Firestore role check
+      DocumentSnapshot doc =
+      await _firestore.collection("users").doc(user.uid).get();
+
+      if (!doc.exists || doc['role'] != "Admin") {
+        await _auth.signOut();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("❌ Access denied: Not an admin")),
+        );
+        return;
+      }
+
+      if (mounted) {
+        HapticFeedback.heavyImpact();
+
+        // Save stay signed in
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('role', 'Admin');
+
+        Navigator.pushReplacementNamed(context, '/admin');
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = "Login failed";
+      if (e.code == 'user-not-found') {
+        message = "No account found with this email";
+      } else if (e.code == 'wrong-password') {
+        message = "Incorrect password";
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ $message")),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EventHiveColors.background, // Soft Grey
+      backgroundColor: EventHiveColors.background,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -57,7 +94,7 @@ class _AdminLoginState extends State<AdminLogin> {
                 const Icon(
                   Icons.admin_panel_settings,
                   size: 100,
-                  color: EventHiveColors.primary, // Teal
+                  color: EventHiveColors.primary,
                 ),
                 const SizedBox(height: 20),
                 const Text(
@@ -65,7 +102,7 @@ class _AdminLoginState extends State<AdminLogin> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: EventHiveColors.text, // Dark Charcoal
+                    color: EventHiveColors.text,
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -132,7 +169,7 @@ class _AdminLoginState extends State<AdminLogin> {
                   onPressed: _loginAdmin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: EventHiveColors.accent,
-                    foregroundColor: EventHiveColors.text,
+                    foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -140,26 +177,6 @@ class _AdminLoginState extends State<AdminLogin> {
                   child: const Text(
                     'Login',
                     style: TextStyle(fontSize: 18),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Google Login
-                TextButton(
-                  onPressed: _loginWithGoogle,
-                  child: const Text(
-                    'Login with Google',
-                    style: TextStyle(color: EventHiveColors.primary),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Forgot Password
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/admin_forgot_password');
-                  },
-                  child: const Text(
-                    'Forgot Password?',
-                    style: TextStyle(color: EventHiveColors.secondaryLight),
                   ),
                 ),
               ],

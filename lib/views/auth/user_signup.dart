@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../themes/colors.dart';
 import 'user_login.dart';
 import '../organizer/organizer_dashboard.dart'; // Organizer dashboard import
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserSignup extends StatefulWidget {
   const UserSignup({super.key});
@@ -21,7 +23,7 @@ class _UserSignupState extends State<UserSignup> {
   String? _selectedGender;
   DateTime? _selectedDOB;
 
-  void _signup() {
+  Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedGender == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -42,18 +44,47 @@ class _UserSignupState extends State<UserSignup> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Account created as $_selectedRole!")),
-      );
-
-      // Navigate based on role
-      if (_selectedRole == 'Organizer') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OrganizerDashboard()),
+      try {
+        // ✅ Create user with FirebaseAuth
+        UserCredential userCredential =
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailCtrl.text.trim(),
+          password: _passwordCtrl.text.trim(),
         );
-      } else {
-        Navigator.pushReplacementNamed(context, '/user');
+
+        User? user = userCredential.user;
+
+        if (user != null) {
+          // ✅ Save user details in Firestore
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'uid': user.uid,
+            'name': _nameCtrl.text.trim(),
+            'email': _emailCtrl.text.trim(),
+            'gender': _selectedGender,
+            'dob': _selectedDOB!.toIso8601String(),
+            'role': _selectedRole.isNotEmpty ? _selectedRole : 'User',
+            'phone': '',
+            'organization': '',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Account created as $_selectedRole!")),
+          );
+
+          if (_selectedRole == 'Organizer') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const OrganizerDashboard()),
+            );
+          } else {
+            Navigator.pushReplacementNamed(context, '/user');
+          }
+        }
+      } on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? "Signup failed")),
+        );
       }
     }
   }

@@ -70,6 +70,12 @@ class _FiltersScreenState extends State<FiltersScreen>
       color: EventHiveColors.accent,
       isSelected: false,
     ),
+    FilterCategory(
+      name: 'Festive',
+      icon: Icons.celebration,
+      color: EventHiveColors.accent,
+      isSelected: false,
+    ),
   ];
 
   final List<FilterOption> priceRanges = [

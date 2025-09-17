@@ -1,15 +1,24 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../themes/colors.dart';
 import 'organizer_events.dart';
 import 'organizer_users.dart';
 import 'organizer_feedback.dart';
 
-class OrganizerMain extends StatelessWidget {
+class OrganizerMain extends StatefulWidget {
   const OrganizerMain({super.key});
 
   @override
+  State<OrganizerMain> createState() => _OrganizerMainState();
+}
+
+class _OrganizerMainState extends State<OrganizerMain> {
+  @override
   Widget build(BuildContext context) {
+    final String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
+
     return Scaffold(
       backgroundColor: EventHiveColors.background,
       appBar: AppBar(
@@ -60,20 +69,60 @@ class OrganizerMain extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Quick Stats Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildStatCard('Events', '12', Icons.event),
-                const SizedBox(width: 12),
-                _buildStatCard('Registrations', '245', Icons.people),
-                const SizedBox(width: 12),
-                _buildStatCard('Feedback', '34', Icons.feedback),
-              ],
+            // Real-time Quick Stats
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection("events")
+                  .where("userId", isEqualTo: userId)
+                  .snapshots(),
+              builder: (context, eventSnap) {
+                if (!eventSnap.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final events = eventSnap.data!.docs;
+                final eventIds = events.map((doc) => doc.id).toList();
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildStatCard('Events', events.length.toString(), Icons.event),
+                    const SizedBox(width: 12),
+                    // Registrations Stream
+                    StreamBuilder<QuerySnapshot>(
+                      stream: eventIds.isEmpty
+                          ? const Stream.empty()
+                          : FirebaseFirestore.instance
+                          .collection("registrations")
+                          .where("eventId", whereIn: eventIds)
+                          .snapshots(),
+                      builder: (context, regSnap) {
+                        final count = regSnap.hasData ? regSnap.data!.docs.length : 0;
+                        return _buildStatCard('Registrations', count.toString(), Icons.people);
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    // Feedback Stream
+                    StreamBuilder<QuerySnapshot>(
+                      stream: eventIds.isEmpty
+                          ? const Stream.empty()
+                          : FirebaseFirestore.instance
+                          .collection("feedback")
+                          .where("eventId", whereIn: eventIds)
+                          .snapshots(),
+                      builder: (context, fbSnap) {
+                        final count = fbSnap.hasData ? fbSnap.data!.docs.length : 0;
+                        return _buildStatCard('Feedback', count.toString(), Icons.feedback);
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
+
             const SizedBox(height: 24),
 
-            // Upcoming Events Preview
+            // Upcoming Events (real-time)
             Text(
               'Upcoming Events',
               style: TextStyle(
@@ -83,16 +132,37 @@ class OrganizerMain extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildUpcomingEventCard(
-              title: 'Tech Summit 2025',
-              date: 'Sept 25, 2025',
-              location: 'Accra Conference Center',
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection("events")
+                  .where("userId", isEqualTo: userId)
+                  .orderBy("timestamp", descending: false)
+                  .limit(2)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final events = snapshot.data!.docs;
+                if (events.isEmpty) {
+                  return Text("No upcoming events",
+                      style: TextStyle(color: EventHiveColors.secondaryLight));
+                }
+
+                return Column(
+                  children: events.take(3).map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return _buildUpcomingEventCard(
+                      title: data["title"] ?? "Untitled",
+                      date: "${data["month"] ?? ""} ${data["date"] ?? ""}",
+                      location: data["fullLocation"] ?? "Unknown",
+                    );
+                  }).toList(),
+                );
+              },
             ),
-            _buildUpcomingEventCard(
-              title: 'Developers Meetup',
-              date: 'Oct 10, 2025',
-              location: 'Online',
-            ),
+
             const SizedBox(height: 24),
 
             // Quick Actions
@@ -141,7 +211,7 @@ class OrganizerMain extends StatelessWidget {
     );
   }
 
-  // Futuristic Stat Card
+  // Stat Card
   Widget _buildStatCard(String label, String value, IconData icon) {
     return Expanded(
       child: ClipRRect(
@@ -192,9 +262,12 @@ class OrganizerMain extends StatelessWidget {
     );
   }
 
-  // Futuristic Upcoming Event Card
-  Widget _buildUpcomingEventCard(
-      {required String title, required String date, required String location}) {
+  // Upcoming Event Card
+  Widget _buildUpcomingEventCard({
+    required String title,
+    required String date,
+    required String location,
+  }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
       child: BackdropFilter(
@@ -231,11 +304,12 @@ class OrganizerMain extends StatelessWidget {
     );
   }
 
-  // Futuristic Quick Action Button
-  Widget _buildActionButton(
-      {required IconData icon,
-        required String label,
-        required VoidCallback onTap}) {
+  // Quick Action Button
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(

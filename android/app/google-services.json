@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "350197577567",
+    "project_id": "eventhives",
+    "storage_bucket": "eventhives.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:350197577567:android:beec6c90e501f6c30268ea",
+        "android_client_info": {
+          "package_name": "com.example.event_hive"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCoEMVOywsSqti4A-gJpvDUTBTVuPRPVs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

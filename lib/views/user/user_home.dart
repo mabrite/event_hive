@@ -1,8 +1,11 @@
-import 'package:event_hive/views/user/registration_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:event_hive/views/user/registration_screen.dart';
 import '../filters_screen.dart';
 import '../notifications_screen.dart';
 import '../../themes/colors.dart';
+import 'package:share_plus/share_plus.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -12,220 +15,16 @@ class Home extends StatefulWidget {
 }
 
 class HomeState extends State<Home> {
-  final List<Map<String, String>> eventData = [
-    {
-      'title': 'Yam Festival',
-      'date': '10',
-      'month': 'September',
-      'attendees': '+20 Going',
-      'location': 'HO',
-      'fullLocation': 'Afede Street, HO',
-      'image': 'https://images.pexels.com/photos/1765033/pexels-photo-1765033.jpeg',
-      'category': 'food',
-    },
-    {
-      'title': 'Homowo',
-      'date': '12',
-      'month': 'August',
-      'attendees': '+35 Going',
-      'location': 'Accra',
-      'fullLocation': 'Spintex, Accra',
-      'image': 'https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg',
-      'category': 'food',
-    },
-    {
-      'title': 'Beach Party',
-      'date': '25',
-      'month': 'June',
-      'attendees': '+100 Going',
-      'location': 'Accra',
-      'fullLocation': 'Labadi Beach, Accra',
-      'image': 'https://images.pexels.com/photos/2747445/pexels-photo-2747445.jpeg',
-      'category': 'music',
-    },
-    {
-      'title': 'Food Festival',
-      'date': '8',
-      'month': 'Sept',
-      'attendees': '+50 Going',
-      'location': 'Accra',
-      'fullLocation': 'East Legon, Accra',
-      'image': 'https://images.pexels.com/photos/3184199/pexels-photo-3184199.jpeg',
-      'category': 'food',
-    },
-    {
-      'title': 'Cultural Night',
-      'date': '18',
-      'month': 'Oct',
-      'attendees': '+70 Going',
-      'location': 'Tema',
-      'fullLocation': 'Tema, Ghana',
-      'image': 'https://images.pexels.com/photos/4666752/pexels-photo-4666752.jpeg',
-      'category': 'music',
-    },
-    {
-      'title': 'STEM Fair',
-      'date': '30',
-      'month': 'Nov',
-      'attendees': '+200 Going',
-      'location': 'Accra',
-      'fullLocation': 'Accra Mall',
-      'image': 'https://images.pexels.com/photos/414886/pexels-photo-414886.jpeg',
-      'category': 'sports',
-    },
-    {
-      'title': 'Football Tournament',
-      'date': '15',
-      'month': 'July',
-      'attendees': '+150 Going',
-      'location': 'Accra',
-      'fullLocation': 'Accra Sports Stadium',
-      'image': 'https://images.pexels.com/photos/46798/the-ball-stadion-football-the-pitch-46798.jpeg',
-      'category': 'sports',
-    },
-    {
-      'title': 'Jazz Concert',
-      'date': '22',
-      'month': 'August',
-      'attendees': '+80 Going',
-      'location': 'Accra',
-      'fullLocation': 'National Theatre, Accra',
-      'image': 'https://images.pexels.com/photos/167491/pexels-photo-167491.jpeg',
-      'category': 'music',
-    },
-    {
-      'title': 'Basketball Championship',
-      'date': '5',
-      'month': 'October',
-      'attendees': '+120 Going',
-      'location': 'Accra',
-      'fullLocation': 'Bukom Boxing Arena',
-      'image': 'https://images.pexels.com/photos/1752757/pexels-photo-1752757.jpeg',
-      'category': 'sports',
-    },
-    {
-      'title': 'Volta Music Festival',
-      'date': '18',
-      'month': 'November',
-      'attendees': '+45 Going',
-      'location': 'HO',
-      'fullLocation': 'Volta Serene, HO',
-      'image': 'https://images.pexels.com/photos/1190297/pexels-photo-1190297.jpeg',
-      'category': 'music',
-    },
-    {
-      'title': 'Ho Sports Day',
-      'date': '7',
-      'month': 'December',
-      'attendees': '+80 Going',
-      'location': 'HO',
-      'fullLocation': 'Ho Sports Stadium',
-      'image': 'https://images.pexels.com/photos/863988/pexels-photo-863988.jpeg',
-      'category': 'sports',
-    },
-  ];
-
   String _selectedCategory = 'all';
-  String _selectedLocation = 'HO'; // Default location
+  String _selectedLocation = 'All'; // Default location
   final Map<String, Color> _categoryColors = {
     'sports': EventHiveColors.accent,
     'music': EventHiveColors.primaryLight,
     'food': EventHiveColors.secondary,
+    'festive': EventHiveColors.secondaryLight,
   };
 
-  final List<String> _availableLocations = ['HO', 'Accra', 'Tema', 'Kumasi', 'Takoradi'];
-
-  List<Map<String, String>> get _filteredEvents {
-    List<Map<String, String>> filtered = eventData;
-
-    // Filter by category
-    if (_selectedCategory != 'all') {
-      filtered = filtered.where((event) => event['category'] == _selectedCategory).toList();
-    }
-
-    // Filter by location
-    if (_selectedLocation != 'All') {
-      filtered = filtered.where((event) => event['location'] == _selectedLocation).toList();
-    }
-
-    return filtered;
-  }
-
-  void _showLocationPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Select Location',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: EventHiveColors.text,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ..._availableLocations.map((location) {
-                return ListTile(
-                  leading: Icon(
-                    Icons.location_on,
-                    color: EventHiveColors.primary,
-                  ),
-                  title: Text(
-                    location,
-                    style: TextStyle(
-                      fontWeight: _selectedLocation == location
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      color: _selectedLocation == location
-                          ? EventHiveColors.primary
-                          : EventHiveColors.text,
-                    ),
-                  ),
-                  trailing: _selectedLocation == location
-                      ? Icon(Icons.check, color: EventHiveColors.primary)
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      _selectedLocation = location;
-                    });
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: Icon(
-                  Icons.public,
-                  color: EventHiveColors.secondary,
-                ),
-                title: const Text(
-                  'All Locations',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: EventHiveColors.secondary,
-                  ),
-                ),
-                trailing: _selectedLocation == 'All'
-                    ? Icon(Icons.check, color: EventHiveColors.secondary)
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _selectedLocation = 'All';
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  final List<String> _availableLocations = ['Ho', 'Accra', 'Tema', 'Kumasi', 'Takoradi'];
 
   @override
   Widget build(BuildContext context) {
@@ -244,30 +43,19 @@ class HomeState extends State<Home> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildCategoryChip(
-                      'Sports',
-                      Icons.sports_soccer,
-                      'sports',
-                      _selectedCategory == 'sports'
-                          ? _categoryColors['sports']!.withOpacity(0.8)
-                          : _categoryColors['sports']!,
-                    ),
-                    _buildCategoryChip(
-                      'Music',
-                      Icons.music_note,
-                      'music',
-                      _selectedCategory == 'music'
-                          ? _categoryColors['music']!.withOpacity(0.8)
-                          : _categoryColors['music']!,
-                    ),
-                    _buildCategoryChip(
-                      'Food',
-                      Icons.restaurant,
-                      'food',
-                      _selectedCategory == 'food'
-                          ? _categoryColors['food']!.withOpacity(0.8)
-                          : _categoryColors['food']!,
-                    ),
+                    _buildCategoryChip('Sports', Icons.sports_soccer, 'sports',
+                        _selectedCategory == 'sports'
+                            ? _categoryColors['sports']!.withOpacity(0.8)
+                            : _categoryColors['sports']!),
+                    _buildCategoryChip('Music', Icons.music_note, 'music',
+                        _selectedCategory == 'music'
+                            ? _categoryColors['music']!.withOpacity(0.8)
+                            : _categoryColors['music']!),
+                    _buildCategoryChip('Food', Icons.restaurant, 'food',
+                        _selectedCategory == 'food'
+                            ? _categoryColors['food']!.withOpacity(0.8)
+                            : _categoryColors['food']!),
+
                   ],
                 ),
               ),
@@ -275,92 +63,127 @@ class HomeState extends State<Home> {
             Expanded(
               child: Container(
                 color: EventHiveColors.background,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_selectedCategory != 'all' || _selectedLocation != 'All')
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _buildFilterText(),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: EventHiveColors.text,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.close, size: 20),
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedCategory = 'all';
-                                    _selectedLocation = 'All';
-                                  });
-                                },
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.grey[200],
-                                  padding: const EdgeInsets.all(4),
-                                ),
-                              ),
-                            ],
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance.collection('events').snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No events yet.\nCheck back later!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: EventHiveColors.secondaryLight,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      _sectionHeader('Upcoming Events'),
-                      const SizedBox(height: 16),
-                      _filteredEvents.isEmpty
-                          ? _buildNoEventsFound()
-                          : SizedBox(
-                        height: 250,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _filteredEvents.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 16),
-                          itemBuilder: (context, index) {
-                            final event = _filteredEvents[index];
-                            return SizedBox(
-                              width: screenWidth * 0.45,
-                              child: InkWell(
-                                onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${event['title']} clicked'),
-                                      action: SnackBarAction(
-                                        label: 'View Details',
-                                        onPressed: () {
-                                          // Add navigation to event details
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => EventRegistrationScreen(event: event),
-                                            ),
-                                          );
+                      );
+                    }
 
-                                        },
-                                      ),
+                    // Convert Firestore docs to Map<String, String> and count attendees
+                    List<Map<String, dynamic>> events = snapshot.data!.docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final attendeesCount = (data['attendees'] as List<dynamic>?)?.length ?? 0;
+                      return {
+                        'title': data['title'] ?? 'Untitled Event',
+                        'date': data['date']?.toString() ?? '',
+                        'month': data['month'] ?? '',
+                        'attendees': '+$attendeesCount Going',
+                        'location': data['location'] ?? '',
+                        'fullLocation': data['fullLocation'] ?? '',
+                        'image': data['image'] ?? '',
+                        'category': data['category'] ?? 'others',
+                      };
+                    }).toList();
+
+                    // Apply filters
+                    if (_selectedCategory != 'all') {
+                      events = events.where((e) => e['category'] == _selectedCategory).toList();
+                    }
+                    if (_selectedLocation != 'All') {
+                      events = events.where((e) => e['location'] == _selectedLocation).toList();
+                    }
+
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_selectedCategory != 'all' || _selectedLocation != 'All')
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _buildFilterText(),
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: EventHiveColors.text),
                                     ),
-                                  );
-                                },
-                                child: _buildEventCard(event),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, size: 20),
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedCategory = 'all';
+                                        _selectedLocation = 'All';
+                                      });
+                                    },
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.grey[200],
+                                      padding: const EdgeInsets.all(4),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          _sectionHeader('Upcoming Events'),
+                          const SizedBox(height: 16),
+                          events.isEmpty
+                              ? _buildNoEventsFound()
+                              : SizedBox(
+                            height: 250,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: events.length,
+                              separatorBuilder: (_, __) => const SizedBox(width: 16),
+                              itemBuilder: (context, index) {
+                                final event = events[index];
+                                return SizedBox(
+                                  width: screenWidth * 0.45,
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EventRegistrationScreen(event: event),
+                                        ),
+                                      );
+                                    },
+                                    child: _buildEventCard(event),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          _buildInviteSection(),
+                          const SizedBox(height: 24),
+                          _sectionHeader('Nearby You'),
+                          const SizedBox(height: 16),
+                          _buildNearbyCard(),
+                          const SizedBox(height: 16),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                      _buildInviteSection(),
-                      const SizedBox(height: 24),
-                      _sectionHeader('Nearby You'),
-                      const SizedBox(height: 16),
-                      _buildNearbyCard(),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -493,9 +316,7 @@ class HomeState extends State<Home> {
               offset: const Offset(0, 6),
             ),
           ],
-          border: isSelected
-              ? Border.all(color: Colors.white, width: 2)
-              : null,
+          border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child: Row(
@@ -505,9 +326,7 @@ class HomeState extends State<Home> {
             const SizedBox(width: 9),
             Text(label,
                 style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500)),
+                    color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
           ],
         ),
       ),
@@ -539,7 +358,7 @@ class HomeState extends State<Home> {
           ),
           const SizedBox(height: 16),
           Text(
-            _buildNoEventsMessage(),
+            'No events found for this filter',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -561,18 +380,7 @@ class HomeState extends State<Home> {
     );
   }
 
-  String _buildNoEventsMessage() {
-    if (_selectedCategory != 'all' && _selectedLocation != 'All') {
-      return 'No ${_selectedCategory} events found in $_selectedLocation';
-    } else if (_selectedCategory != 'all') {
-      return 'No ${_selectedCategory} events found';
-    } else if (_selectedLocation != 'All') {
-      return 'No events found in $_selectedLocation';
-    }
-    return 'No events found';
-  }
-
-  Widget _buildEventCard(Map<String, String> event) {
+  Widget _buildEventCard(Map<String, dynamic> event) {
     final category = event['category'];
     final categoryColor = _categoryColors[category];
 
@@ -600,21 +408,6 @@ class HomeState extends State<Home> {
                   height: 120,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      height: 120,
-                      color: Colors.grey[200],
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                              : null,
-                        ),
-                      ),
-                    );
-                  },
                 ),
                 Container(
                   height: 120,
@@ -637,12 +430,12 @@ class HomeState extends State<Home> {
                     ),
                     child: Column(
                       children: [
-                        Text(event['date']!,
+                        Text(event['date'] ?? '',
                             style: const TextStyle(
                                 color: EventHiveColors.accent,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14)),
-                        Text(event['month']!,
+                        Text(event['month'] ?? '',
                             style: const TextStyle(
                                 color: EventHiveColors.accent, fontSize: 10)),
                       ],
@@ -719,13 +512,15 @@ class HomeState extends State<Home> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: EventHiveColors.text)),
-        const Text('See All',
-            style: TextStyle(color: Colors.grey, fontSize: 14)),
+        const Text('See All', style: TextStyle(color: Colors.grey, fontSize: 14)),
       ],
     );
   }
 
   Widget _buildInviteSection() {
+    final String deepLink = "https://eventshives.com/invite?"
+        "referral=${FirebaseAuth.instance.currentUser!.uid}";
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -749,16 +544,21 @@ class HomeState extends State<Home> {
                         fontWeight: FontWeight.bold,
                         color: EventHiveColors.text)),
                 const Text('Get GHS 20 for ticket',
-                    style:
-                    TextStyle(fontSize: 13, color: EventHiveColors.secondary)),
+                    style: TextStyle(fontSize: 13, color: EventHiveColors.secondary)),
                 const SizedBox(height: 15),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    SharePlus.instance.share(
+                      ShareParams(
+                        text: 'Hey! Join EventsHives App using my link: $deepLink',
+                        subject: 'Join me at this event!',
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: EventHiveColors.accent,
                     foregroundColor: Colors.white,
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -781,45 +581,118 @@ class HomeState extends State<Home> {
   }
 
   Widget _buildNearbyCard() {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black12, blurRadius: 30, offset: const Offset(0, 8)),
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              'https://images.pexels.com/photos/1181357/pexels-photo-1181357.jpeg',
-              width: 79,
-              height: 61,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text('1st May - Sat - 2:00 PM',
-                    style: TextStyle(color: EventHiveColors.primary, fontSize: 12)),
-                SizedBox(height: 4),
-                Text("Women's Leadership Conference",
-                    style: TextStyle(
-                        color: EventHiveColors.text,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500)),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('events')
+          .where('location', isEqualTo: _selectedLocation)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(color: Colors.black12, blurRadius: 20, offset: const Offset(0, 6)),
               ],
             ),
+            child: const Center(
+              child: Text(
+                'No nearby events found',
+                style: TextStyle(fontSize: 14, color: EventHiveColors.secondary),
+              ),
+            ),
+          );
+        }
+
+        // Take first nearby event or map through all if you want multiple
+        final doc = snapshot.data!.docs.first;
+        final data = doc.data() as Map<String, dynamic>;
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(color: Colors.black12, blurRadius: 20, offset: const Offset(0, 6)),
+            ],
           ),
-          const Icon(Icons.bookmark_border, color: Colors.grey, size: 16),
-        ],
+          child: Row(
+            children: [
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                    color: EventHiveColors.primary, borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.location_on, color: Colors.white, size: 36),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(data['title'] ?? 'Untitled Event',
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                    Text('${data['location'] ?? _selectedLocation}, GH',
+                        style: const TextStyle(fontSize: 13, color: EventHiveColors.secondary)),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          EventRegistrationScreen(event: data),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: EventHiveColors.accent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Join', style: TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLocationPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _availableLocations
+              .map(
+                (loc) => ListTile(
+              title: Text(loc),
+              onTap: () {
+                setState(() {
+                  _selectedLocation = loc;
+                });
+                Navigator.pop(context);
+              },
+            ),
+          )
+              .toList(),
+        ),
       ),
     );
   }
