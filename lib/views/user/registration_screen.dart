@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../themes/colors.dart';
 
 class EventRegistrationScreen extends StatefulWidget {
@@ -30,6 +32,53 @@ class EventRegistrationScreenState extends State<EventRegistrationScreen> {
     super.dispose();
   }
 
+  // Helper to convert month string to int
+  int _monthStringToInt(String month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months.indexOf(month) + 1; // DateTime months start at 1
+  }
+
+  // Send email via backend endpoint
+  Future<void> _sendEmail({
+    required String name,
+    required String email,
+    required String eventTitle,
+    required String eventDate,
+    required String eventLocation,
+    required int tickets,
+    required String eventLink,
+  }) async {
+    final uri = Uri.parse('https://sunburnchatapi.onrender.com/event_hives_send_email');
+    final body = jsonEncode({
+      "name": name,
+      "email": email,
+      "event_title": eventTitle,
+      "event_date": eventDate,
+      "event_location": eventLocation,
+      "tickets": tickets.toString(),
+      "event_link": eventLink,
+    });
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint('Email sending failed: ${response.body}');
+      } else {
+        debugPrint('Email sent successfully.');
+      }
+    } catch (e) {
+      debugPrint('Error sending email: $e');
+    }
+  }
+
   Future<void> _submitRegistration() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -45,7 +94,7 @@ class EventRegistrationScreenState extends State<EventRegistrationScreen> {
         return;
       }
 
-      final eventId = widget.event['id']; // Ensure we pass eventId in event map
+      final eventId = widget.event['id'];
       final eventRef =
       FirebaseFirestore.instance.collection('events').doc(eventId);
 
@@ -54,7 +103,7 @@ class EventRegistrationScreenState extends State<EventRegistrationScreen> {
         'attendees': FieldValue.arrayUnion([user.uid]),
       });
 
-      // Optionally save a registration record (for history)
+      // Save registration record
       await FirebaseFirestore.instance.collection('registrations').add({
         'userId': user.uid,
         'eventId': eventId,
@@ -65,6 +114,25 @@ class EventRegistrationScreenState extends State<EventRegistrationScreen> {
         'paymentMethod': _selectedPaymentMethod,
         'timestamp': FieldValue.serverTimestamp(),
       });
+
+      // Build formatted date
+      final eventDate = DateTime(
+        int.tryParse(widget.event['year'] ?? '2025') ?? 2025,
+        _monthStringToInt(widget.event['month'] ?? 'Jan'),
+        int.tryParse(widget.event['day'] ?? '1') ?? 1,
+      );
+      final formattedDate = DateFormat('MMM dd, y').format(eventDate);
+
+      // Send email
+      await _sendEmail(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        eventTitle: widget.event['title'] ?? '',
+        eventDate: formattedDate,
+        eventLocation: widget.event['fullLocation'] ?? '',
+        tickets: _ticketCount,
+        eventLink: widget.event['link'] ?? '',
+      );
 
       if (mounted) {
         showDialog(
@@ -94,6 +162,89 @@ class EventRegistrationScreenState extends State<EventRegistrationScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Widget _buildEventSummary(Map<String, dynamic> event) {
+    DateTime? eventDate;
+    try {
+      final day = int.tryParse(event['day'] ?? '1') ?? 1;
+      final month = _monthStringToInt(event['month'] ?? 'Jan');
+      final year = int.tryParse(event['year'] ?? '2025') ?? 2025;
+      eventDate = DateTime(year, month, day);
+    } catch (_) {
+      eventDate = null;
+    }
+
+    final String formattedDate =
+    eventDate != null ? DateFormat('MMM dd, y').format(eventDate) : 'TBA';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              event['image'] ?? '',
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  event['title'] ?? '',
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: EventHiveColors.text),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today,
+                        size: 16, color: EventHiveColors.secondary),
+                    const SizedBox(width: 8),
+                    Text(formattedDate,
+                        style: const TextStyle(color: EventHiveColors.secondary)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        size: 16, color: EventHiveColors.secondary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        event['fullLocation'] ?? '',
+                        style: const TextStyle(color: EventHiveColors.secondary),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -179,9 +330,7 @@ class EventRegistrationScreenState extends State<EventRegistrationScreen> {
                     children: [
                       IconButton(
                         onPressed: () {
-                          if (_ticketCount > 1) {
-                            setState(() => _ticketCount--);
-                          }
+                          if (_ticketCount > 1) setState(() => _ticketCount--);
                         },
                         icon: const Icon(Icons.remove),
                       ),
@@ -236,90 +385,6 @@ class EventRegistrationScreenState extends State<EventRegistrationScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildEventSummary(Map<String, dynamic> event) {
-    DateTime? eventDate;
-
-    if (event['date'] is Timestamp) {
-      eventDate = (event['date'] as Timestamp).toDate();
-    } else if (event['date'] is String) {
-      eventDate = DateTime.tryParse(event['date']);
-    } else if (event['date'] is DateTime) {
-      eventDate = event['date'];
-    }
-
-    final String formattedDate =
-    eventDate != null ? DateFormat('MMM dd, y').format(eventDate) : 'TBA';
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              widget.event['image'] ?? '',
-              width: 80,
-              height: 80,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.event['title'] ?? '',
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: EventHiveColors.text),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today,
-                        size: 16, color: EventHiveColors.secondary),
-                    const SizedBox(width: 8),
-                    Text(formattedDate,
-                        style: const TextStyle(color: EventHiveColors.secondary)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on,
-                        size: 16, color: EventHiveColors.secondary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.event['fullLocation'] ?? '',
-                        style:
-                        const TextStyle(color: EventHiveColors.secondary),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

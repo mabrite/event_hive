@@ -1,5 +1,7 @@
 import 'package:event_hive/views/user/user_main.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../views/admin/admin_dashboard.dart';
 import '../views/admin/admin_events.dart';
 import '../views/admin/admin_users.dart';
@@ -83,11 +85,17 @@ class _AdminDrawerState extends State<AdminDrawer>
             content: const Text('Are you sure you want to logout?'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
+                onPressed: () {
+                  // Just close the dialog without logging out
+                  Navigator.of(context).pop(false);
+                },
                 child: const Text('Cancel'),
               ),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () {
+                  // Confirm logout
+                  Navigator.of(context).pop(true);
+                },
                 child: const Text(
                   'Logout',
                   style: TextStyle(color: Colors.red),
@@ -99,8 +107,13 @@ class _AdminDrawerState extends State<AdminDrawer>
       );
 
       if (shouldLogout == true) {
-        // Call your authentication service to logout
-        await AuthService.logout();
+        // Remove shared preferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('isLoggedIn');
+        await prefs.remove('role');
+
+        // Sign out from Firebase
+        await FirebaseAuth.instance.signOut();
 
         // Navigate to login screen and remove all previous routes
         Navigator.of(context).pushAndRemoveUntil(

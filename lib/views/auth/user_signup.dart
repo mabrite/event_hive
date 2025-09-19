@@ -23,6 +23,8 @@ class _UserSignupState extends State<UserSignup> {
   String? _selectedGender;
   DateTime? _selectedDOB;
 
+  bool _isLoading = false; // <-- Loading state
+
   Future<void> _signup() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedGender == null) {
@@ -43,6 +45,8 @@ class _UserSignupState extends State<UserSignup> {
         );
         return;
       }
+
+      setState(() => _isLoading = true); // start loading
 
       try {
         // ✅ Create user with FirebaseAuth
@@ -85,6 +89,8 @@ class _UserSignupState extends State<UserSignup> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message ?? "Signup failed")),
         );
+      } finally {
+        setState(() => _isLoading = false); // stop loading
       }
     }
   }
@@ -275,7 +281,7 @@ class _UserSignupState extends State<UserSignup> {
 
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _signup,
+                  onPressed: _isLoading ? null : _signup, // disable while loading
                   style: ElevatedButton.styleFrom(
                     backgroundColor: EventHiveColors.primary,
                     shape: RoundedRectangleBorder(
@@ -283,7 +289,16 @@ class _UserSignupState extends State<UserSignup> {
                     ),
                     minimumSize: const Size(double.infinity, 55),
                   ),
-                  child: const Row(
+                  child: _isLoading
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
@@ -367,22 +382,6 @@ class _UserSignupState extends State<UserSignup> {
       ),
       validator: (val) =>
       val == null || val.isEmpty ? 'Please enter $hint' : null,
-    );
-  }
-
-  Widget _socialButton(String label, String iconUrl, VoidCallback onTap) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Image.network(iconUrl, height: 24, width: 24),
-      label: Text(label, style: TextStyle(color: EventHiveColors.text)),
-      style: OutlinedButton.styleFrom(
-        backgroundColor: EventHiveColors.background,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        side: BorderSide(color: EventHiveColors.secondaryLight),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
     );
   }
 }

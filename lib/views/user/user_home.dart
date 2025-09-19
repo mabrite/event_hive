@@ -6,6 +6,7 @@ import '../filters_screen.dart';
 import '../notifications_screen.dart';
 import '../../themes/colors.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:intl/intl.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -16,7 +17,7 @@ class Home extends StatefulWidget {
 
 class HomeState extends State<Home> {
   String _selectedCategory = 'all';
-  String _selectedLocation = 'All'; // Default location
+  String _selectedLocation = 'All';
   final Map<String, Color> _categoryColors = {
     'sports': EventHiveColors.accent,
     'music': EventHiveColors.primaryLight,
@@ -55,7 +56,10 @@ class HomeState extends State<Home> {
                         _selectedCategory == 'food'
                             ? _categoryColors['food']!.withOpacity(0.8)
                             : _categoryColors['food']!),
-
+                    _buildCategoryChip('Festive', Icons.celebration, 'festive',
+                        _selectedCategory == 'festive'
+                            ? _categoryColors['festive']!.withOpacity(0.8)
+                            : _categoryColors['festive']!),
                   ],
                 ),
               ),
@@ -84,14 +88,22 @@ class HomeState extends State<Home> {
                       );
                     }
 
-                    // Convert Firestore docs to Map<String, String> and count attendees
+                    // Map Firestore docs
                     List<Map<String, dynamic>> events = snapshot.data!.docs.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
                       final attendeesCount = (data['attendees'] as List<dynamic>?)?.length ?? 0;
+
+                      // Ensure correct date display
+                      final date = data['date'] ?? '20';
+                      final month = data['month'] ?? 'Sep';
+                      final year = data['year'] ?? '2025';
+
                       return {
+                        'id': doc.id,
                         'title': data['title'] ?? 'Untitled Event',
-                        'date': data['date']?.toString() ?? '',
-                        'month': data['month'] ?? '',
+                        'date': date,
+                        'month': month,
+                        'year': year,
                         'attendees': '+$attendeesCount Going',
                         'location': data['location'] ?? '',
                         'fullLocation': data['fullLocation'] ?? '',
@@ -610,7 +622,6 @@ class HomeState extends State<Home> {
           );
         }
 
-        // Take first nearby event or map through all if you want multiple
         final doc = snapshot.data!.docs.first;
         final data = doc.data() as Map<String, dynamic>;
 
@@ -650,8 +661,7 @@ class HomeState extends State<Home> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          EventRegistrationScreen(event: data),
+                      builder: (context) => EventRegistrationScreen(event: data),
                     ),
                   );
                 },
